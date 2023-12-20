@@ -1,4 +1,4 @@
-from src.day01.day01 import to_calibration, to_digit_numbers_only
+from src.day01.day01 import to_calibration, to_digit_numbers_only, attempt
 
 
 class TestToCalibration:
@@ -18,6 +18,7 @@ class TestToCalibration:
 class TestToDigitNumbersOnly:
     def test_when_string_digits_at_start_and_end(self):
         assert to_digit_numbers_only("two1nine") == "219"
+        assert attempt("two1nine") == 29
 
     def test_when_three_string_digits(self):
         assert to_digit_numbers_only("eightwothree") == "8wo3"

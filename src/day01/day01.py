@@ -45,7 +45,8 @@ def to_digit_numbers_only(document: str):
 
     return "".join(translate(token) for token in tokenize(document))
 
-
+def attempt(document: str):
+    return to_calibration(to_digit_numbers_only(document))
 def _parse():
     with open("input.dat", "r") as data:
         return [line.strip() for line in data.readlines()]
