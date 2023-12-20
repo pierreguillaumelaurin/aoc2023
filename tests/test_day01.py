@@ -1,4 +1,4 @@
-from day01 import to_calibration, to_digit_numbers_only
+from src.day01.day01 import to_calibration, to_digit_numbers_only
 
 
 class TestToCalibration:
