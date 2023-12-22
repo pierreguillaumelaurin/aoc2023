@@ -20,22 +20,20 @@ def to_digit_numbers_only(document: str):
         "nine": "9",
     }
 
-    def tokenize(document_: str) -> List[str]:
+    def lex(document_: str) -> List[str]:
         if len(document_) == 1:
             return [document_]
 
         k = 1
-        while k < len(document_):
+        while k <= len(document_):
             substring = document_[:k]
-            if substring in tokens.keys():
-                return [substring] + tokenize(document_[k:])
+            if substring in tokens.keys() and k == len(document_):
+                return [substring]
+            elif substring in tokens.keys() and k != len(document_):
+                return [substring] + lex(document_[1:])
             k += 1
 
-        substring = document_[:k]
-        if substring in tokens.keys():
-            return [substring]
-        k += 1
-        return [document_[0]] + tokenize(document_[1:])
+        return [document_[0]] + lex(document_[1:])
 
     def translate(token: str) -> str:
         if token in tokens.keys():
@@ -43,22 +41,23 @@ def to_digit_numbers_only(document: str):
         else:
             return token
 
-    return "".join(translate(token) for token in tokenize(document))
+    return "".join(translate(token) for token in lex(document))
 
-def attempt(document: str):
-    return to_calibration(to_digit_numbers_only(document))
-def _parse():
+
+def parsed_input():
     with open("input.dat", "r") as data:
         return [line.strip() for line in data.readlines()]
 
 
-def part_one():
-    return sum(to_calibration(document) for document in _parse())
+def part_one(parsed_file: List[str]):
+    return sum(to_calibration(document) for document in parsed_file)
 
 
-def part_two():
-    return sum(to_calibration(to_digit_numbers_only(document)) for document in _parse())
+def part_two(parsed_file: List[str]):
+    return sum(
+        to_calibration(to_digit_numbers_only(document)) for document in parsed_file
+    )
 
 
 if __name__ == "__main__":
-    print(part_one(), part_two())
+    print(part_one(parsed_input()), part_two(parsed_input()))

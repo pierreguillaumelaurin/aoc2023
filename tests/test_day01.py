@@ -1,7 +1,7 @@
-from src.day01.day01 import to_calibration, to_digit_numbers_only, attempt
+from src.day01.day01 import to_calibration, part_two
 
 
-class TestToCalibration:
+class TestPartOne:
     class TestGivenOneDigitInString:
         def test_it_should_return_first_and_last_number(self):
             assert to_calibration("treb7uchet") == 77
@@ -15,21 +15,28 @@ class TestToCalibration:
                 assert to_calibration("aos0cb8") == 8
 
 
-class TestToDigitNumbersOnly:
+class TestPartTwo:
     def test_when_string_digits_at_start_and_end(self):
-        assert to_digit_numbers_only("two1nine") == "219"
-        assert attempt("two1nine") == 29
+        assert part_two(["two1nine"]) == 29
 
     def test_when_three_string_digits(self):
-        assert to_digit_numbers_only("eightwothree") == "8wo3"
+        assert part_two(["eightwothree"]) == 83
+        assert part_two(["sevenfourfour99seven8"]) == 78
+        assert part_two(["fivenhcvbntlcfthreemsktzr9two"]) == 52
 
     def test_when_digits_and_letters(self):
-        assert to_digit_numbers_only("abcone2threexyz") == "abc123xyz"
+        assert part_two(["abcone2threexyz"]) == 13
 
     def test_when_digits_overlapping(self):
-        assert to_digit_numbers_only("xtwone3four") == "x2ne34"
-        assert to_digit_numbers_only("zoneight234") == "z1ight234"
+        assert part_two(["xtwone3four"]) == 24
+        assert part_two(["zoneight234"]) == 14
 
     def test_when_border_numbers_are_digits(self):
-        assert to_digit_numbers_only("4nineeightseven2") == "49872"
-        assert to_digit_numbers_only("7pqrstsixteen") == "7pqrst6teen"
+        assert part_two(["4nineeightseven2"]) == 42
+        assert part_two(["7pqrstsixteen"]) == 76
+
+    def test_when_longest_input(self):
+        assert (
+            part_two(["psgqgrbhsdvhgdxvbdqcxmstnhnqmhchjmbtsdll5qrhlngzzonetwoneg"])
+            == 51
+        )
