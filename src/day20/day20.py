@@ -1,6 +1,9 @@
+from math import lcm
+from pydot import Dot, Node, Edge
+
+from abc import ABC, abstractmethod
 from enum import Enum
-from itertools import islice
-from typing import TypedDict, Dict, List, Tuple
+from typing import TypedDict, Dict, List, Tuple, Iterable, Optional
 
 from src.utils import flatten
 
@@ -10,22 +13,230 @@ def parse_input():
         return [line.strip() for line in data.readlines()]
 
 
+def visualize_input(raw_input: List[str]):
+    def to_node_id(left: str) -> str:
+        return left if left == "broadcaster" else left[1:]
+
+    tokens = to_tokens(raw_input)
+    nodes = set(token for token in tokens)
+    graph = Dot("day20", graph_type="digraph", bgcolor="pink")
+
+    for node in nodes:
+        graph.add_node(Node(to_node_id(node[0]), label=node[0]))
+    graph.add_node(Node("rx", label="Sandmover"))
+
+    for token in tokens:
+        graph.add_edge(Edge(to_node_id(token[0]), token[1]))
+
+    graph.write("day20.dot")
+
+
+def to_tokens(parsed_input: List[str]) -> List[Tuple[str, str]]:
+    def lex(raw_communication: str) -> Multicast:
+        tokens = [token.strip(",") for token in raw_communication.split(" ")]
+        return {"sender": tokens[0], "receivers": tokens[2:]}
+
+    def to_unicast(multicast: Multicast) -> List[Tuple[str, str]]:
+        return [(multicast["sender"], receiver) for receiver in multicast["receivers"]]
+
+    return flatten(to_unicast(lex(line)) for line in parsed_input)
+
+
+def to_module_id(source_token: str):
+    return (
+        source_token
+        if source_token == "broadcaster" or source_token == "button"
+        else source_token[1:]
+    )
+
+
+def to_module_type(source_token: str):
+    return (
+        source_token
+        if source_token == "broadcaster" or source_token == "button"
+        else source_token[0]
+    )
+
+
 class Pulse(Enum):
     HIGH = "high"
     LOW = "low"
 
 
-class ModuleType(Enum):
-    BUTTON = "button"
-    BROADCAST = "broadcast"
-    FLIPFLOP = "flipflop"
-    CONJUNCTION = "conjunction"
+class Message(TypedDict):
+    id: str
+    pulse: Pulse
 
 
-# TODO refactor module typing
+class PulseCounter:
+    def __init__(self):
+        self.high = 0
+        self.low = 0
 
-class Module(TypedDict):
-    type: ModuleType
+
+class Module(ABC):
+    id: str
+
+    def __init__(self, identifier: str, counter: PulseCounter):
+        self.id = identifier
+        self.counter = counter
+        self.outputs = []
+
+    @abstractmethod
+    def send(self) -> Optional[Message]:
+        pass
+
+    @abstractmethod
+    def receive(self, message: Message):
+        pass
+
+    def send_messages(self):
+        messages = [self.send() for _ in self.outputs]
+
+        for output, message in zip(self.outputs, messages):
+            output.receive(message)
+
+    def count_pulse(self, pulse: Pulse):
+        match pulse:
+            case Pulse.HIGH:
+                self.counter.high += 1
+            case Pulse.LOW:
+                self.counter.low += 1
+
+
+class Button(Module):
+    def __init__(self, identifier: str, counter: PulseCounter):
+        super().__init__(identifier, counter)
+
+    def receive(self, message: Message):
+        self.send_messages()
+
+    def send(self):
+        self.count_pulse(Pulse.LOW)
+        return {"id": self.id, "pulse": Pulse.LOW}
+
+
+class Broadcast(Module):
+    def receive(self, message: Message):
+        self.send_messages()
+
+    def send(self):
+        self.count_pulse(Pulse.LOW)
+        return {"id": self.id, "pulse": Pulse.LOW}
+
+
+class Flipflop(Module):
+    def __init__(self, identifier: str, counter: PulseCounter):
+        super().__init__(identifier, counter)
+        self.on = False
+
+    def receive(self, message: Message):
+        if message["pulse"] == Pulse.LOW:
+            self.on = not self.on
+            self.send_messages()
+
+    def send(self):
+        pulse = Pulse.HIGH if self.on else Pulse.LOW
+
+        self.count_pulse(pulse)
+        return {"id": self.id, "pulse": pulse}
+
+
+class Conjunction(Module):
+    inputs: Dict[str, Pulse]
+
+    def __init__(self, identifier: str, counter: PulseCounter):
+        super().__init__(identifier, counter)
+        self.inputs = {}
+
+    def receive(self, message: Message):
+        self.inputs[message["id"]] = message["pulse"]
+        self.send_messages()
+
+    def send(self):
+        pulses_on_high = (pulse == Pulse.HIGH for pulse in self.inputs.values())
+        pulse = Pulse.LOW if all(pulses_on_high) else Pulse.HIGH
+
+        self.count_pulse(pulse)
+        return {"id": self.id, "pulse": pulse}
+
+
+class SandMover(Module):
+    def __init__(self, identifier: str, counter: PulseCounter):
+        super().__init__(identifier, counter)
+        self.on = False
+
+    def receive(self, message: Message):
+        if message["pulse"] == Pulse.LOW:
+            self.on = True
+
+    def send(self):
+        pass
+
+
+class Network:
+    def __init__(self, tokens: Iterable[Tuple[str, str]]):
+        self.modules = {}
+        self.counter = PulseCounter()
+
+        self._instantiate_modules(tokens)
+        self._populate_conjunction_modules_inputs(tokens)
+        self._populate_outputs(tokens)
+
+    def _instantiate_modules(self, tokens: Iterable[Tuple[str, str]]):
+        for token in tokens:
+            module_id, module_type = to_module_id(token[0]), to_module_type(token[0])
+
+            match module_type:
+                case "%":
+                    self.modules[module_id] = Flipflop(
+                        identifier=module_id, counter=self.counter
+                    )
+                case "&":
+                    self.modules[module_id] = Conjunction(
+                        identifier=module_id, counter=self.counter
+                    )
+                case "broadcaster":
+                    self.modules["broadcaster"] = Broadcast(
+                        identifier=module_id, counter=self.counter
+                    )
+                case "button":
+                    self.modules["button"] = Button(
+                        identifier=module_id, counter=self.counter
+                    )
+
+        self._instantiate_module_with_no_outputs(tokens)
+
+    def _instantiate_module_with_no_outputs(self, tokens):
+        modules_with_no_output = set(token[1] for token in tokens) - set(
+            self.modules.keys()
+        )
+        for module_id_with_no_output in modules_with_no_output:
+            self.modules[module_id_with_no_output] = SandMover(
+                identifier=module_id_with_no_output, counter=self.counter
+            )
+
+    def _populate_conjunction_modules_inputs(self, tokens: Iterable[Tuple[str, str]]):
+        for token in tokens:
+            source_module_id = to_module_id(token[0])
+            destination_module_id = token[1]
+
+            if isinstance(self.modules[destination_module_id], Conjunction):
+                self.modules[destination_module_id].inputs[source_module_id] = Pulse.LOW
+
+    def _populate_outputs(self, tokens: Iterable[Tuple[str, str]]):
+        for token in tokens:
+            source_module_id = to_module_id(token[0])
+            destination_module_id = token[1]
+
+            self.modules[source_module_id].outputs.append(
+                self.modules[destination_module_id]
+            )
+
+    def trigger(self):
+        self.counter.low += 1
+
+        self.modules["broadcaster"].receive({"id": "button", "pulse": Pulse.LOW})
 
 
 class Multicast(TypedDict):
@@ -33,141 +244,47 @@ class Multicast(TypedDict):
     receivers: List[str]
 
 
-class MulticastWithPulse(Multicast):
-    pulse: Pulse
-
-
-class Broadcast(Module):
-    pass
-
-
-class Flipflop(Module):
-    on: bool
-
-
-class Conjunction(Module):
-    connected_inputs: Dict[str, bool]
-
-
 class Pulses(TypedDict):
     high: int
     low: int
 
 
-class NetworkState(TypedDict):
-    modules: Dict
-    pulses: Pulses
+def part_one(raw_communications: List[str]) -> int:
+    tokens = to_tokens(raw_communications)
+    network = Network(tokens)
+
+    for _ in range(1000):
+        network.trigger()
+
+    return network.counter.high * network.counter.low
 
 
-# sum of receivers in each communication
+def part_two(raw_communications: List[str]) -> int:
+    def check(module_id: str) -> int:
+        network = Network(tokens)
+        trigger_count = 0
+
+        while network.modules["jz"].inputs[module_id] != Pulse.HIGH:
+            network.trigger()
+            trigger_count += 1
+            if trigger_count % 10000 == 0:
+                print(trigger_count)
+
+        return trigger_count
+
+    tokens = to_tokens(raw_communications)
+
+    return lcm(check("mk"), check("rn"), check("vf"), check("dh"))
+
+    # while network.modules["rx"].on is False:
+    #     network.trigger()
+    #     trigger_count += 1
+    #     if trigger_count % 10_000 == 0:
+    #         print(network.modules["jz"].inputs)
+
+    # return trigger_count
 
 
-def part_one(raw_communications: List[str]):
-    # TODO refactor using less concepts
-    def lex(raw_communication: str) -> Multicast:
-        tokens = [token.strip(",") for token in raw_communication.split(" ")]
-        return {"sender": tokens[0], "receivers": tokens[2:]}
-
-    def to_communications(multicast: Multicast) -> List[Tuple[str, str]]:
-        return [(multicast["sender"], receiver) for receiver in multicast["receivers"]]
-
-    def to_communication_by_time(
-            raw_communications: List[str],
-    ) -> List[Tuple[str, str]]:
-        communications_groups = (
-            to_communications(lex(raw_communication))
-            for raw_communication in raw_communications
-        )
-
-        return [("button", "broadcaster")] + flatten(communications_groups)
-
-    # TODO type state
-    def to_next_state(previous, communication) -> NetworkState:
-        source_module_type = communication[0][0]
-        destination_module_type = communication[1][0]
-
-        # TODO separate into functions
-        # send pulse
-        # TODO refactor for ifs
-        last_pulse: Pulse
-        match source_module_type:
-            case "%":
-                if previous["modules"][communication[0][1:]]["latest_pulse"] == Pulse.LOW:
-                    pass
-                elif previous["modules"][communication[0][1:]]["on"] is False:
-                    previous["pulses"]["high"] += 1
-                    last_pulse = Pulse.HIGH
-                    receive_pulse(previous, communication, last_pulse)
-                else:
-                    previous["pulses"]["low"] += 1
-                    last_pulse = Pulse.LOW
-                    receive_pulse(previous, communication, last_pulse)
-            case '&':
-                if all(pulse == Pulse.HIGH for pulse in previous["modules"][
-                                                                      communication[0][1:]]["inputs"].values()):
-                    previous["pulses"]["low"] += 1
-                    last_pulse = Pulse.LOW
-                    receive_pulse(previous, communication, last_pulse)
-                else:
-                    previous["pulses"]["high"] += 1
-                    last_pulse = Pulse.HIGH
-                    receive_pulse(previous, communication, last_pulse)
-            case _:
-                previous["pulses"]["low"] += 1
-                last_pulse = Pulse.LOW
-                receive_pulse(previous, communication, last_pulse)
-
-        # receive pulse
-
-        return previous
-
-    def receive_pulse(previous, communication, last_pulse):
-        destination_module_type = previous["modules"][communication[1]]["type"]
-
-        if destination_module_type == ModuleType.FLIPFLOP and last_pulse == Pulse.LOW:
-            previous[communication[1]]["on"] = not previous[communication[1]]["on"]
-        elif destination_module_type == ModuleType.BROADCAST:
-            previous[communication[1]]["inputs"][communication[0]] = last_pulse
-
-    def get_initial_state(communications: List[Tuple[str, str]]) -> NetworkState:
-        modules = {}
-        # TODO set initial state outside of function
-
-        for communication in communications:
-            module_id = communication[0] if communication[0][0] == "b" else communication[0][1:]
-            if communication[0][0] == '%':
-                modules[module_id] = {"type": ModuleType.FLIPFLOP, "on": False, "latest_pulse": Pulse}
-            elif communication[0][0] == '&':
-                modules[module_id] = {"type": ModuleType.CONJUNCTION, "inputs": {}}
-            elif communication[0] == 'broadcaster':
-                modules['broadcaster'] = {"type": ModuleType.BROADCAST}
-            elif communication[0] == 'button':
-                modules['button'] = {"type": ModuleType.BUTTON}
-
-        for communication in communications:
-            if modules[communication[1]]["type"] == ModuleType.CONJUNCTION and communication[0][0] == "b":
-                modules[communication[1]]["inputs"][communication[0]] = Pulse.LOW
-            elif modules[communication[1]]["type"] == ModuleType.CONJUNCTION:
-                modules[communication[1]]["inputs"][communication[0][1:]] = Pulse.LOW
-        return {"modules": modules, "pulses": {"high": 0, "low": 0}}
-
-    def network_state(communications: List[Tuple[str, str]], initial_state: NetworkState):
-        state: NetworkState = initial_state
-
-        for communication in communications:
-            state = to_next_state(state, communication)
-            yield state
-
-    times_button_pressed = 1000
-    communications = to_communication_by_time(raw_communications)
-
-    network_states = network_state(
-        times_button_pressed * to_communication_by_time(raw_communications), get_initial_state(communications)
-    )
-
-    # TODO extract?
-    for _ in range(times_button_pressed - 1):
-        next(network_states)
-    final_state = next(network_states)
-    return final_state["pulses"]["high"] * final_state["pulses"]["low"]
-
+if __name__ == "__main__":
+    # visualize_input(parse_input())
+    print(part_one(parse_input()), part_two(parse_input()))
