@@ -148,6 +148,7 @@ class Conjunction(Module):
     def __init__(self, identifier: str, counter: PulseCounter):
         super().__init__(identifier, counter)
         self.inputs = {}
+        self.cycle = False
 
     def receive(self, message: Message):
         self.inputs[message["id"]] = message["pulse"]
@@ -156,6 +157,9 @@ class Conjunction(Module):
     def send(self):
         pulses_on_high = (pulse == Pulse.HIGH for pulse in self.inputs.values())
         pulse = Pulse.LOW if all(pulses_on_high) else Pulse.HIGH
+
+        if pulse == Pulse.HIGH:
+            self.cycle = True
 
         self.count_pulse(pulse)
         return {"id": self.id, "pulse": pulse}
@@ -260,29 +264,18 @@ def part_one(raw_communications: List[str]) -> int:
 
 
 def part_two(raw_communications: List[str]) -> int:
-    def check(module_id: str) -> int:
-        network = Network(tokens)
-        trigger_count = 0
+    def to_power_of_two(exponents: Iterable[int]):
+        return (2 ** exponent for exponent in exponents)
 
-        while network.modules["jz"].inputs[module_id] != Pulse.HIGH:
-            network.trigger()
-            trigger_count += 1
-            if trigger_count % 10000 == 0:
-                print(trigger_count)
+    first_cycle_nodes_index_that_must_be_on = [0, 1, 2, 8, 9, 10, 11]
+    second_cycle_nodes_index_that_must_be_on = [0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    third_cycle_nodes_index_that_must_be_on = [0, 1, 4, 6, 8, 9, 10, 11]
+    fourth_cycle_nodes_index_that_must_be_on = [0, 5, 7, 8, 9, 10, 11]
 
-        return trigger_count
-
-    tokens = to_tokens(raw_communications)
-
-    return lcm(check("mk"), check("rn"), check("vf"), check("dh"))
-
-    # while network.modules["rx"].on is False:
-    #     network.trigger()
-    #     trigger_count += 1
-    #     if trigger_count % 10_000 == 0:
-    #         print(network.modules["jz"].inputs)
-
-    # return trigger_count
+    return lcm(sum(to_power_of_two(first_cycle_nodes_index_that_must_be_on)),
+               sum(to_power_of_two(second_cycle_nodes_index_that_must_be_on)),
+               sum(to_power_of_two(third_cycle_nodes_index_that_must_be_on)),
+               sum(to_power_of_two(fourth_cycle_nodes_index_that_must_be_on)))
 
 
 if __name__ == "__main__":
