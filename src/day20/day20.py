@@ -265,17 +265,19 @@ def part_one(raw_communications: List[str]) -> int:
 
 def part_two(raw_communications: List[str]) -> int:
     def to_power_of_two(exponents: Iterable[int]):
-        return (2 ** exponent for exponent in exponents)
+        return (2**exponent for exponent in exponents)
 
     first_cycle_nodes_index_that_must_be_on = [0, 1, 2, 8, 9, 10, 11]
     second_cycle_nodes_index_that_must_be_on = [0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     third_cycle_nodes_index_that_must_be_on = [0, 1, 4, 6, 8, 9, 10, 11]
     fourth_cycle_nodes_index_that_must_be_on = [0, 5, 7, 8, 9, 10, 11]
 
-    return lcm(sum(to_power_of_two(first_cycle_nodes_index_that_must_be_on)),
-               sum(to_power_of_two(second_cycle_nodes_index_that_must_be_on)),
-               sum(to_power_of_two(third_cycle_nodes_index_that_must_be_on)),
-               sum(to_power_of_two(fourth_cycle_nodes_index_that_must_be_on)))
+    return lcm(
+        sum(to_power_of_two(first_cycle_nodes_index_that_must_be_on)),
+        sum(to_power_of_two(second_cycle_nodes_index_that_must_be_on)),
+        sum(to_power_of_two(third_cycle_nodes_index_that_must_be_on)),
+        sum(to_power_of_two(fourth_cycle_nodes_index_that_must_be_on)),
+    )
 
 
 if __name__ == "__main__":
