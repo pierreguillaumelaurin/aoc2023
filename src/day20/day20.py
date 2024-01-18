@@ -13,11 +13,11 @@ def parse_input():
         return [line.strip() for line in data.readlines()]
 
 
-def visualize_input(raw_input: List[str]):
+def visualize_input(input_: List[str]):
     def to_node_id(left: str) -> str:
         return left if left == "broadcaster" else left[1:]
 
-    tokens = to_tokens(raw_input)
+    tokens = to_tokens(input_)
     nodes = set(token for token in tokens)
     graph = Dot("day20", graph_type="digraph", bgcolor="pink")
 

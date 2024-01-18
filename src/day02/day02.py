@@ -28,7 +28,7 @@ def to_game(line: str) -> Game:
     }
 
 
-def part_one(raw_input):
+def part_one(input_):
     def set_possible(game_set: Dict[str, int]) -> bool:
         maximum_numbers = {"red": 12, "green": 13, "blue": 14}
         return all(maximum_numbers[k] >= game_set[k] for k in game_set.keys())
@@ -36,12 +36,12 @@ def part_one(raw_input):
     def game_possible(sets: List[Dict[str, int]]):
         return all(set_possible(game_set) for game_set in sets)
 
-    games = [to_game(line) for line in raw_input]
+    games = [to_game(line) for line in input_]
 
     return sum(game["number"] for game in games if game_possible(game["sets"]))
 
 
-def part_two(raw_input):
+def part_two(input_):
     def to_power(game: Game) -> int:
         return (
             max(v for set in game["sets"] for k, v in set.items() if k == "red")
@@ -49,7 +49,7 @@ def part_two(raw_input):
             * max(v for set in game["sets"] for k, v in set.items() if k == "blue")
         )
 
-    games = [to_game(line) for line in raw_input]
+    games = [to_game(line) for line in input_]
 
     return sum(to_power(game) for game in games)
 
