@@ -15,42 +15,42 @@ def is_symbol(cell: str):
     return not cell.isdigit() and cell not in INVALID_CHARS
 
 
-def to_coordinates(matrix: List[List[str]]) -> Set[Coordinates]:
+def to_coordinates_dict(matrix: List[str]) -> Dict[Coordinates, str]:
     return {
-        Coordinates(x, y)
+        Coordinates(x, y): cell
         for x, line in enumerate(matrix)
-        for y in range(len(line))
+        for y, cell in enumerate(line)
     }
 
 
-def coordinate_has_adjacent_symbols(matrix: List[List[str]], coordinates_list: Set[Coordinates], coordinates: Coordinates):
+def coordinate_has_adjacent_symbols(coordinates_dict: Dict[Coordinates, str], coordinates: Coordinates):
     return any(
         is_symbol(cell)
-        for cell in get_adjacent_cells(matrix, coordinates_list, coordinates)
+        for cell in get_adjacent_cells(coordinates_dict, coordinates).values()
     )
 
 
-def get_adjacent_cells(matrix: List[List[str]], coordinates_list: Set[Coordinates], coordinates: Coordinates) -> List[str]:
+def get_adjacent_cells(coordinates_dict: Dict[Coordinates, str], coordinates: Coordinates) -> Dict[Coordinates, str]:
     x, y = coordinates
     adjacents_x = x - 1, x, x + 1
     adjacents_y = y - 1, y, y + 1
 
-    return [
-        matrix[i][j]
+    return {
+        (i,j): coordinates_dict[(i,j)]
         for i in adjacents_x
         for j in adjacents_y
-        if (i, j) in coordinates_list
-    ]
+        if (i, j) in coordinates_dict.keys()
+    }
 
 
-def part_one(matrix: List[List[str]]):
-    coordinates = to_coordinates(matrix)
+def part_one(matrix: List[str]):
+    coordinates_dict = to_coordinates_dict(matrix)
     res = 0
     current_number = ""
     current_number_is_valid = False
     for i, line in enumerate(matrix):
-        for y, cell in enumerate(line):
-            if cell.isdigit() and coordinate_has_adjacent_symbols(matrix, coordinates, (i, y)):
+        for j, cell in enumerate(line):
+            if cell.isdigit() and coordinate_has_adjacent_symbols(coordinates_dict, (i, j)):
                 current_number_is_valid = True
 
             if cell.isdigit():
