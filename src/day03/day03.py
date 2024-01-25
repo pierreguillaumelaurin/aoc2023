@@ -89,11 +89,11 @@ def part_two(matrix: List[str]):
         k: [] for k, v in coordinates_dict.items() if v == "*"
     }
 
-    def track_numbers_adjacents_to_star_symbols(adjacent_star_coordinates_, current_number_):
+    def track_numbers_adjacents_to_star_symbols(
+        adjacent_star_coordinates_, current_number_
+    ):
         for coordinates in adjacent_star_coordinates_:
-            numbers_adjacents_to_star_symbols[coordinates].append(
-                int(current_number_)
-            )
+            numbers_adjacents_to_star_symbols[coordinates].append(int(current_number_))
 
     current_number = ""
     adjacent_star_coordinates = set()
@@ -108,7 +108,9 @@ def part_two(matrix: List[str]):
             elif cell.isdigit():
                 current_number += cell
             elif len(current_number) > 0 and len(adjacent_star_coordinates) > 0:
-                track_numbers_adjacents_to_star_symbols(adjacent_star_coordinates, current_number)
+                track_numbers_adjacents_to_star_symbols(
+                    adjacent_star_coordinates, current_number
+                )
 
                 current_number = ""
                 adjacent_star_coordinates = set()
