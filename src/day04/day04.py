@@ -1,5 +1,5 @@
-from typing import List, Tuple
 import re
+from typing import List, Tuple
 
 
 def parsed_input():
@@ -8,7 +8,7 @@ def parsed_input():
 
 
 def numbers_in_string(string: str) -> List[int]:
-    return [int(match) for match in re.findall("\d+", string)]
+    return [int(match) for match in re.findall(r"\d+", string)]
 
 
 def get_card_info(line) -> Tuple[int, List[int], List[int]]:

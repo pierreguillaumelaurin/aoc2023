@@ -1,13 +1,13 @@
 from src.day20.day20 import (
-    part_one,
     Broadcast,
-    Pulse,
-    Flipflop,
-    Conjunction,
     Button,
+    Conjunction,
+    Flipflop,
     Network,
-    to_tokens,
+    Pulse,
     PulseCounter,
+    part_one,
+    to_tokens,
 )
 
 AN_ID = "db"

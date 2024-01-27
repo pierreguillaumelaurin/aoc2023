@@ -1,9 +1,9 @@
-from math import lcm
-from pydot import Dot, Node, Edge
-
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import TypedDict, Dict, List, Tuple, Iterable, Optional
+from math import lcm
+from typing import Dict, Iterable, List, Optional, Tuple, TypedDict
+
+from pydot import Dot, Edge, Node
 
 from src.utils import flatten
 

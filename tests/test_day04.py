@@ -1,4 +1,4 @@
-from src.day04.day04 import part_one, part_two, parsed_input
+from src.day04.day04 import parsed_input, part_one, part_two
 
 
 def test_part_one():

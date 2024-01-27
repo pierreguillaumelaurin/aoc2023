@@ -1,4 +1,4 @@
-from src.day01.day01 import to_calibration, part_two
+from src.day01.day01 import part_two, to_calibration
 
 
 class TestPartOne:

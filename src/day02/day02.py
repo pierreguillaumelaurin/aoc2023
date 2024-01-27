@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import TypedDict, Dict, List
+from typing import Dict, List, TypedDict
 
 
 def parsed_input():
