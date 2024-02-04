@@ -1,6 +1,8 @@
 import re
 from typing import Dict, Iterable, List
 
+from src.utils import print_with_benchmark
+
 Section = Dict[range, range]
 
 
@@ -134,6 +136,7 @@ def part_two(lines: List[str]):
 
 
 if __name__ == "__main__":
-    # assert part_one(parsed_input()) == 289863851
+    assert part_one(parsed_input()) == 289863851
     assert part_two(parsed_input()) > 36040106
-    print(part_one(parsed_input()), part_two(parsed_input()))
+    print_with_benchmark(part_one, parsed_input())
+    print_with_benchmark(part_two, parsed_input())
