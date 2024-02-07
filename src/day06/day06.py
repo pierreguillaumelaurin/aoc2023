@@ -3,7 +3,7 @@ from functools import cache, lru_cache
 from math import prod
 from typing import Dict, List, Tuple
 
-from src.utils import print_with_benchmark
+from src.utils import benchmark
 
 Race = Tuple[int, int]
 
@@ -32,6 +32,7 @@ def to_race_result(race_duration: int, time_button_pressed: int):
     return (race_duration - time_button_pressed) * time_button_pressed
 
 
+@benchmark
 def part_one(lines: List[str]):
     races = {
         int(time.group()): int(distance.group())
@@ -51,4 +52,4 @@ def part_two(lines: List[str]):
 
 
 if __name__ == "__main__":
-    print_with_benchmark(lambda: part_one(parsed_input()))
+    print(part_one(parsed_input()))

@@ -1,7 +1,7 @@
 import re
 from typing import Dict, Iterable, List
 
-from src.utils import print_with_benchmark
+from src.utils import benchmark
 
 Section = Dict[range, range]
 
@@ -103,6 +103,7 @@ def traverse(sections_: List[Section], seeds: List[range]) -> List[range]:
     return traverse(sections_[1:], destination)
 
 
+@benchmark
 def part_one(lines: List[str]):
     def to_seeds(line: str):
         return [
@@ -118,6 +119,7 @@ def part_one(lines: List[str]):
     return min(location.start for location in locations)
 
 
+@benchmark
 def part_two(lines: List[str]):
     def to_range_seeds(line: str):
         return [
@@ -139,5 +141,5 @@ def part_two(lines: List[str]):
 if __name__ == "__main__":
     assert part_one(parsed_input()) == 289863851
     assert part_two(parsed_input()) > 36040106
-    print_with_benchmark(lambda: part_one(parsed_input()))
-    print_with_benchmark(lambda: part_two(parsed_input()))
+    print(part_one(parsed_input()))
+    print(part_two(parsed_input()))
