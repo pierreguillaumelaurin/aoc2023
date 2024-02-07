@@ -1,5 +1,7 @@
 import re
+from bisect import bisect_left
 from functools import cache, lru_cache
+from itertools import islice, tee
 from math import prod
 from typing import Dict, List, Tuple
 
@@ -49,27 +51,47 @@ def part_one(lines: List[str]):
 
 @benchmark
 def part_two(lines: List[str]):
-    def shortest_button_hold_that_wins(race_: Race):
-        time, record_in_mm = race_
-        return next(
-            time_button_pressed
-            for time_button_pressed in range(time)
-            if to_race_result(
-                time, time_button_pressed
-            )
-            > record_in_mm
-        )
+    def shortest_button_that_wins(race: Race):
+        time, record_in_mm = race
+        r = range(1, time - 1)
+        start, end = r.start, r.stop
+        while start <= end:
+            mid = start + (end - start) // 2
+            match to_race_result(time, mid - 1) > record_in_mm, to_race_result(
+                time, mid
+            ) > record_in_mm, to_race_result(time, mid + 1) > record_in_mm:
+                case False, True, True:
+                    return mid
+                case True, True, False:
+                    end = mid - 1
+                case True, True, True:
+                    end = mid - 1
+                case False, False, False if mid > r.stop // 2:
+                    end = mid - 1
+                case False, False, False if mid <= r.stop // 2:
+                    start = mid + 1
+        return float("inf")
 
-    def longest_button_hold_that_wins(race_: Race):
-        time, record_in_mm = race_
-        return next(
-            time_button_pressed
-            for time_button_pressed in range(time, 0, -1)
-            if to_race_result(
-                time, time_button_pressed
-            )
-            > record_in_mm
-        )
+    def longest_button_that_wins(race: Race):
+        time, record_in_mm = race
+        r = range(1, time - 1)
+        start, end = r.start, r.stop
+        while start <= end:
+            mid = start + (end - start) // 2
+            match to_race_result(time, mid - 1) > record_in_mm, to_race_result(
+                time, mid
+            ) > record_in_mm, to_race_result(time, mid + 1) > record_in_mm:
+                case True, True, False:
+                    return mid
+                case False, True, True:
+                    start = mid + 1
+                case True, True, True:
+                    start = mid + 1
+                case False, False, False if mid <= r.stop // 2:
+                    start = mid + 1
+                case False, False, False if mid > r.stop // 2:
+                    end = mid - 1
+        return float("inf")
 
     race = next(
         (int(time.group()), int(distance.group()))
@@ -79,9 +101,7 @@ def part_two(lines: List[str]):
         )
     )
 
-    return (
-        longest_button_hold_that_wins(race) - shortest_button_hold_that_wins(race) + 1
-    )
+    return longest_button_that_wins(race) - shortest_button_that_wins(race) + 1
 
 
 if __name__ == "__main__":
