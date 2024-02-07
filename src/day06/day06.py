@@ -47,9 +47,43 @@ def part_one(lines: List[str]):
     return prod(number_of_winning_strategies_by_race)
 
 
+@benchmark
 def part_two(lines: List[str]):
-    pass
+    def shortest_button_hold_that_wins(race_: Race):
+        time, record_in_mm = race_
+        return next(
+            time_button_pressed
+            for time_button_pressed in range(time)
+            if to_race_result(
+                time, time_button_pressed
+            )
+            > record_in_mm
+        )
+
+    def longest_button_hold_that_wins(race_: Race):
+        time, record_in_mm = race_
+        return next(
+            time_button_pressed
+            for time_button_pressed in range(time, 0, -1)
+            if to_race_result(
+                time, time_button_pressed
+            )
+            > record_in_mm
+        )
+
+    race = next(
+        (int(time.group()), int(distance.group()))
+        for time, distance in zip(
+            re.finditer(r"\d+", lines[0].replace(" ", "")),
+            re.finditer(r"\d+", lines[1].replace(" ", "")),
+        )
+    )
+
+    return (
+        longest_button_hold_that_wins(race) - shortest_button_hold_that_wins(race) + 1
+    )
 
 
 if __name__ == "__main__":
     print(part_one(parsed_input()))
+    print(part_two(parsed_input()))

@@ -15,4 +15,5 @@ def benchmark(func):
         end_time = time.perf_counter()  # 2
         print(f"{func.__name__!r} executed in {end_time - start_time} seconds.")
         return value
+
     return wrapper
