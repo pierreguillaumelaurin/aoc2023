@@ -8,12 +8,10 @@ EXAMPLE = [
     "QQQJA 483",
 ]
 
-FULL_HOUSE = [" 777"]
-
 
 def test_part_one():
     assert part_one(EXAMPLE) == 6440
 
 
 def test_part_two():
-    assert part_two(EXAMPLE) == 46
+    assert part_two(EXAMPLE) == 5905

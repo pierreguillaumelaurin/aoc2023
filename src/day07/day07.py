@@ -1,6 +1,5 @@
 from collections import defaultdict
-from enum import Enum
-from typing import List, Dict, Tuple
+from typing import Dict, List, Tuple, TypedDict
 
 from src.utils import benchmark
 
@@ -22,38 +21,20 @@ def sorted_(hex_array: List[Tuple[hex, int]]):
     return sorted((int(h, 16), bid) for h, bid in hex_array)
 
 
-# TODO
-def to_hex(card: str) -> hex:
-    match card:
-        case "A":
-            return hex(0xE)
-        case "K":
-            return hex(0xD)
-        case "Q":
-            return hex(0xC)
-        case "J":
-            return hex(0xB)
-        case "T":
-            return hex(0xA)
-        case "9":
-            return hex(0x9)
-        case "8":
-            return hex(0x8)
-        case "7":
-            return hex(0x7)
-        case "6":
-            return hex(0x6)
-        case "5":
-            return hex(0x5)
-        case "4":
-            return hex(0x4)
-        case "3":
-            return hex(0x3)
-        case "2":
-            return hex(0x2)
+class NonDigitCardValues(TypedDict):
+    A: str
+    K: str
+    Q: str
+    J: str
+    T: str
 
 
-def to_value(card_set: str) -> hex:
+def to_hex(non_digit_values: NonDigitCardValues, card: str) -> hex:
+    return non_digit_values[card] if card in non_digit_values.keys() else hex(int(card))
+
+
+def to_value(non_digit_values: NonDigitCardValues, card_set: str) -> hex:
+
     def card_count(card_set_: str) -> Dict[str, int]:
         count = defaultdict(int)
         for c in card_set_:
@@ -61,7 +42,7 @@ def to_value(card_set: str) -> hex:
         return count
 
     def to_hand_kind_value(card_set_: str) -> hex:
-        base = hex(16 ** 5)
+        base = hex(16**5)
         match card_count(card_set_).values():
             case c if len(c) == 1:
                 return multiply(hex(7), base)
@@ -80,14 +61,22 @@ def to_value(card_set: str) -> hex:
 
     result = hex(0)
     for card in card_set:
-        result = add(multiply(result, hex(0x10)), to_hex(card))
+        result = add(multiply(result, hex(0x10)), to_hex(non_digit_values, card))
     return add(to_hand_kind_value(card_set), result)
 
 
 @benchmark
 def part_one(lines: List[str]):
-    hands = [tuple(line.split(' ')) for line in lines]
-    hand_values = [(to_value(card_set), int(bid)) for card_set, bid in hands]
+    non_digit_card_values = {
+        "A": hex(0xE),
+        "K": hex(0xD),
+        "Q": hex(0xC),
+        "J": hex(0xB),
+        "T": hex(0xA),
+    }
+
+    hands = [tuple(line.split(" ")) for line in lines]
+    hand_values = [(to_value(non_digit_card_values, card_set), int(bid)) for card_set, bid in hands]
     winnings = [int(bid) * (i + 1) for (i, (_, bid)) in enumerate(sorted_(hand_values))]
     return sum(winnings)
 
