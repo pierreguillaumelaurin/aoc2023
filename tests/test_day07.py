@@ -1,4 +1,4 @@
-from src.day07.day07 import part_one, part_two, to_value
+from src.day07.day07 import part_one, part_two
 
 EXAMPLE = [
     "32T3K 765",
