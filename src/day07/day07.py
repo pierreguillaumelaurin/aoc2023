@@ -60,7 +60,7 @@ def to_hand_kind_value(card_count_: Dict[str, int]) -> hex:
         case c if len(c) == 5:
             return multiply(hex(1), base)
         case _:
-            raise Exception('hoopa loopa!', card_count_)
+            raise Exception("hoopa loopa!", card_count_)
 
 
 @benchmark
@@ -73,7 +73,7 @@ def part_one(lines: List[str]):
         "T": hex(0xA),
     }
 
-    def to_value(non_digit_values: NonDigitCardValues, card_set: str) -> hex:
+    def to_hand_value(non_digit_values: NonDigitCardValues, card_set: str) -> hex:
         result = hex(0)
         for card in card_set:
             result = add(multiply(result, hex(0x10)), to_hex(non_digit_values, card))
@@ -81,7 +81,7 @@ def part_one(lines: List[str]):
 
     hands = [tuple(line.split(" ")) for line in lines]
     hand_values = [
-        (to_value(non_digit_card_values, card_set), int(bid)) for card_set, bid in hands
+        (to_hand_value(non_digit_card_values, card_set), int(bid)) for card_set, bid in hands
     ]
     winnings = [int(bid) * (i + 1) for (i, (_, bid)) in enumerate(sorted_(hand_values))]
     return sum(winnings)
@@ -97,28 +97,23 @@ def part_two(lines: List[str]):
         "J": hex(0x1),
     }
 
+    def joker_ajusted_hand(card_count_: Dict[str, int]):
+        def card_count_or_zero_for_j(key: str):
+            return 0 if key == "J" else card_count_[key]
 
-    def j_ajusted(card_count_: Dict[str, int]):
-        def custom_max(key: str):
-            if key == "J":
-                return 0
-            else:
-                return card_count_[key]
-        max_key = max(card_count_, key=custom_max)  # TODO refact using float
+        max_key = max(card_count_, key=card_count_or_zero_for_j)
         if "J" in card_count_.keys() and max_key != "J":
             return {
                 **card_count_,
                 max_key: card_count_[max_key] + card_count_["J"],
                 "J": 0,
             }
-        elif list(card_count_.values()).count(card_count_[max_key]) > 1:
-            return card_count_
         else:
             return card_count_
 
-    def to_value(non_digit_values: NonDigitCardValues, card_set: str) -> hex:
+    def to_hand_value(non_digit_values: NonDigitCardValues, card_set: str) -> hex:
         result = hex(0)
-        card_count_ = j_ajusted(card_count(card_set))
+        card_count_ = joker_ajusted_hand(card_count(card_set))
         for card in card_set:
             result = add(multiply(result, hex(0x10)), to_hex(non_digit_values, card))
         return add(to_hand_kind_value(card_count_), result)
@@ -126,7 +121,7 @@ def part_two(lines: List[str]):
     hands = [tuple(line.split(" ")) for line in lines]
 
     hand_values = [
-        (to_value(non_digit_card_values, card_set), int(bid)) for card_set, bid in hands
+        (to_hand_value(non_digit_card_values, card_set), int(bid)) for card_set, bid in hands
     ]
     winnings = [int(bid) * (i + 1) for (i, (_, bid)) in enumerate(sorted_(hand_values))]
     return sum(winnings)
