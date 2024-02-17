@@ -1,7 +1,13 @@
-LLR
+from src.day08.day08 import part_one
 
-AAA = (BBB, BBB)
-BBB = (AAA, ZZZ)
-ZZZ = (ZZZ, ZZZ)
+EXAMPLE = [
+    "LLR",
+    "",
+    "AAA = (BBB, BBB)",
+    "BBB = (AAA, ZZZ)",
+    "ZZZ = (ZZZ, ZZZ)"
+]
 
-assert 6
+
+def test_part_one():
+    assert part_one(EXAMPLE) == 6
