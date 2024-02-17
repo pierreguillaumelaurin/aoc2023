@@ -81,7 +81,8 @@ def part_one(lines: List[str]):
 
     hands = [tuple(line.split(" ")) for line in lines]
     hand_values = [
-        (to_hand_value(non_digit_card_values, card_set), int(bid)) for card_set, bid in hands
+        (to_hand_value(non_digit_card_values, card_set), int(bid))
+        for card_set, bid in hands
     ]
     winnings = [int(bid) * (i + 1) for (i, (_, bid)) in enumerate(sorted_(hand_values))]
     return sum(winnings)
@@ -121,7 +122,8 @@ def part_two(lines: List[str]):
     hands = [tuple(line.split(" ")) for line in lines]
 
     hand_values = [
-        (to_hand_value(non_digit_card_values, card_set), int(bid)) for card_set, bid in hands
+        (to_hand_value(non_digit_card_values, card_set), int(bid))
+        for card_set, bid in hands
     ]
     winnings = [int(bid) * (i + 1) for (i, (_, bid)) in enumerate(sorted_(hand_values))]
     return sum(winnings)

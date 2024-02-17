@@ -1,5 +1,6 @@
 import re
-from typing import List
+from math import lcm
+from typing import Dict, List, Tuple
 
 from src.utils import benchmark
 
@@ -21,14 +22,15 @@ def to_network(raw_network: List[str]):
     return network
 
 
-@benchmark
-def part_one(lines: List[str]):
-    instructions, _, *raw_network = lines
-    network = to_network(raw_network)
-
+def count_for_key(
+    instructions: str,
+    network: Dict[str, Tuple[str, str]],
+    starting_key: str,
+    ending_key: str,
+):
     count = 0
-    current_key = "AAA"
-    while current_key != "ZZZ":
+    current_key = starting_key
+    while re.match(ending_key, current_key) is None:
         instruction = instructions[count % len(instructions)]
         match instruction:
             case "L":
@@ -43,15 +45,31 @@ def part_one(lines: List[str]):
 
 
 @benchmark
+def part_one(lines: List[str]):
+    instructions, _, *raw_network = lines
+    network = to_network(raw_network)
+
+    return count_for_key(instructions, network, starting_key="AAA", ending_key="ZZZ")
+
+
+@benchmark
 def part_two(lines: List[str]):
     instructions, _, *raw_network = lines
     network = to_network(raw_network)
 
-    count = 0
-    current_keys = [line.split(" ")[0] for line in raw_network if line.split(" ")[0][-1] == "A"]
-    print(current_keys)
+    current_keys = [
+        line.split(" ")[0] for line in raw_network if line.split(" ")[0][-1] == "A"
+    ]
+    count_for_current_keys = [
+        count_for_key(instructions, network, starting_key=key, ending_key=r"\w\wZ")
+        for key in current_keys
+    ]
+
+    return lcm(*count_for_current_keys)
 
 
 if __name__ == "__main__":
+    assert part_one(parsed_input()) == 20569
+    assert part_two(parsed_input()) == 21366921060721
     print(part_one(parsed_input()))
     print(part_two(parsed_input()))
