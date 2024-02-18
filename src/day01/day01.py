@@ -1,5 +1,7 @@
 from typing import List
 
+from src.utils import benchmark
+
 
 def to_calibration(document: str):
     numbers = [int(s) for s in document if s.isdigit()]
@@ -49,10 +51,12 @@ def parsed_input():
         return [line.strip() for line in data.readlines()]
 
 
+@benchmark
 def part_one(parsed_file: List[str]):
     return sum(to_calibration(document) for document in parsed_file)
 
 
+@benchmark
 def part_two(parsed_file: List[str]):
     return sum(
         to_calibration(to_digit_numbers_only(document)) for document in parsed_file

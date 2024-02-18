@@ -1,6 +1,8 @@
 from enum import Enum
 from typing import Dict, List, TypedDict
 
+from src.utils import benchmark
+
 
 def parsed_input():
     with open("input.dat", "r") as data:
@@ -28,6 +30,7 @@ def to_game(line: str) -> Game:
     }
 
 
+@benchmark
 def part_one(input_):
     def set_possible(game_set: Dict[str, int]) -> bool:
         maximum_numbers = {"red": 12, "green": 13, "blue": 14}
@@ -41,12 +44,13 @@ def part_one(input_):
     return sum(game["number"] for game in games if game_possible(game["sets"]))
 
 
+@benchmark
 def part_two(input_):
     def to_power(game: Game) -> int:
         return (
-            max(v for set in game["sets"] for k, v in set.items() if k == "red")
-            * max(v for set in game["sets"] for k, v in set.items() if k == "green")
-            * max(v for set in game["sets"] for k, v in set.items() if k == "blue")
+            max(v for game_set in game["sets"] for k, v in game_set.items() if k == "red")
+            * max(v for game_set in game["sets"] for k, v in game_set.items() if k == "green")
+            * max(v for game_set in game["sets"] for k, v in game_set.items() if k == "blue")
         )
 
     games = [to_game(line) for line in input_]
@@ -55,4 +59,6 @@ def part_two(input_):
 
 
 if __name__ == "__main__":
+    assert part_one(parsed_input()) == 1931
+    assert part_two(parsed_input()) == 83105
     print(part_one(parsed_input()), part_two(parsed_input()))
