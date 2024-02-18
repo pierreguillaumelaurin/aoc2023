@@ -1,21 +1,12 @@
-from collections import namedtuple
 from math import prod
 from typing import Dict, List, Set
 
-Coordinates = namedtuple("Coordinates", ["x", "y"])
+from src.coordinates import Coordinates, get_adjacent_cells, to_coordinates_dict
 
 
 def parsed_input() -> List[str]:
     with open("input.dat", "r") as data:
         return [line.strip() for line in data.readlines()]
-
-
-def to_coordinates_dict(matrix: List[str]) -> Dict[Coordinates, str]:
-    return {
-        Coordinates(x, y): cell
-        for x, line in enumerate(matrix)
-        for y, cell in enumerate(line)
-    }
 
 
 def coordinate_has_adjacent_symbols(
@@ -39,21 +30,6 @@ def get_adjacent_stars_coordinates(
             coordinates_dict, coordinates
         ).items()
         if cell == "*"
-    }
-
-
-def get_adjacent_cells(
-    coordinates_dict: Dict[Coordinates, str], coordinates: Coordinates
-) -> Dict[Coordinates, str]:
-    x, y = coordinates
-    adjacents_x = x - 1, x, x + 1
-    adjacents_y = y - 1, y, y + 1
-
-    return {
-        (i, j): coordinates_dict[(i, j)]
-        for i in adjacents_x
-        for j in adjacents_y
-        if (i, j) in coordinates_dict.keys()
     }
 
 

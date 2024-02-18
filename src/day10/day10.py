@@ -1,3 +1,6 @@
+from typing import List
+
+from src.coordinates import to_coordinates_dict
 from src.utils import benchmark
 
 
@@ -6,17 +9,17 @@ def parsed_input():
         return [line.strip() for line in data.readlines()]
 
 
-destinations_with_left_hand_on_wall = {
-    "|": ("|"),
+entrances = {
+    "|": {(1,0), (-1,0)},
     "-": ("-"),
     "L": (),
     "J": (),
     "7": (),
     "F": (),
-    "S": ()
+    "S": (),
 }
 
 
 @benchmark
-def part_one():
-    pass
+def part_one(matrix: List[str]):
+    coordinates_dict = to_coordinates_dict(matrix)

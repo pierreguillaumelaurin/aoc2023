@@ -48,9 +48,24 @@ def part_one(input_):
 def part_two(input_):
     def to_power(game: Game) -> int:
         return (
-            max(v for game_set in game["sets"] for k, v in game_set.items() if k == "red")
-            * max(v for game_set in game["sets"] for k, v in game_set.items() if k == "green")
-            * max(v for game_set in game["sets"] for k, v in game_set.items() if k == "blue")
+            max(
+                v
+                for game_set in game["sets"]
+                for k, v in game_set.items()
+                if k == "red"
+            )
+            * max(
+                v
+                for game_set in game["sets"]
+                for k, v in game_set.items()
+                if k == "green"
+            )
+            * max(
+                v
+                for game_set in game["sets"]
+                for k, v in game_set.items()
+                if k == "blue"
+            )
         )
 
     games = [to_game(line) for line in input_]
