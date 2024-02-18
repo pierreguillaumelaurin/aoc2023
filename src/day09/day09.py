@@ -1,4 +1,7 @@
-from typing import List
+from collections import deque
+from typing import Deque, List
+
+from src.utils import benchmark
 
 
 def parsed_input():
@@ -6,26 +9,28 @@ def parsed_input():
         return [line.strip() for line in data.readlines()]
 
 
-def to_differences(numbers: List[List[int]]):
+def to_differences(numbers: List[Deque[int]]):
     while any(n != 0 for n in numbers[-1]):
         last = numbers[-1]
-        differences = [last[i + 1] - last[i] for i in range(len(last) - 1)]
+        differences = deque(last[i + 1] - last[i] for i in range(len(last) - 1))
         numbers.append(differences)
     return numbers
 
 
-def with_added_values(differences: List[List[int]]):
+def with_added_values(differences: List[Deque[int]]):
     while len(differences) > 1:
         last = differences.pop()
         differences[-1].append(last[-1] + differences[-1][-1])
     return differences.pop()
 
 
+@benchmark
 def part_one(lines: List[str]):
-    values = [[int(s) for s in line.split(" ")] for line in lines]
+    values = [deque(int(s) for s in line.split(" ")) for line in lines]
 
     return sum(with_added_values(to_differences([value])).pop() for value in values)
 
 
 if __name__ == "__main__":
+    assert part_one(parsed_input()) == 1884768153
     print(part_one(parsed_input()))
