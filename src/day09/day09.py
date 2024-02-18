@@ -1,0 +1,31 @@
+from typing import List
+
+
+def parsed_input():
+    with open("./input.dat", "r") as data:
+        return [line.strip() for line in data.readlines()]
+
+
+def to_differences(numbers: List[List[int]]):
+    while any(n != 0 for n in numbers[-1]):
+        last = numbers[-1]
+        differences = [last[i + 1] - last[i] for i in range(len(last) - 1)]
+        numbers.append(differences)
+    return numbers
+
+
+def with_added_values(differences: List[List[int]]):
+    while len(differences) > 1:
+        last = differences.pop()
+        differences[-1].append(last[-1] + differences[-1][-1])
+    return differences.pop()
+
+
+def part_one(lines: List[str]):
+    values = [[int(s) for s in line.split(" ")] for line in lines]
+
+    return sum(with_added_values(to_differences([value])).pop() for value in values)
+
+
+if __name__ == "__main__":
+    print(part_one(parsed_input()))
