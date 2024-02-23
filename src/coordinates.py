@@ -20,8 +20,13 @@ def to_coordinates_dict(matrix: List[str]) -> Dict[Coordinates, str]:
     }
 
 
-def translate(left_coord: Coordinates, right_coord: Coordinates):
-    return Coordinates(left_coord[0] + right_coord[0], left_coord[1] + right_coord[1])
+def translate(base: Coordinates, coordinates: set[Coordinates]):
+    def _translate(left_coord: Coordinates, right_coord: Coordinates):
+        return Coordinates(
+            left_coord[0] + right_coord[0], left_coord[1] + right_coord[1]
+        )
+
+    return {_translate(base, coordinate) for coordinate in coordinates}
 
 
 def get_adjacent_cells(

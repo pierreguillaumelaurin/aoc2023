@@ -12,37 +12,53 @@ def parsed_input():
 
 # TODO isolate/rename, find better implementation
 def get_adjacent_cells(
-    coordinates_dict: Dict[Coordinates, str], coordinates: Coordinates
+        coordinates_dict: Dict[Coordinates, str], coordinates: Coordinates
 ) -> Dict[Coordinates, str]:
     x, y = coordinates
     adjacents_x = x - 1, x, x + 1
     adjacents_y = y - 1, y, y + 1
+    adjacent_cells = {}
+    for i in adjacents_x:
+        if (i, y) in coordinates_dict.keys() and (i, y) != (x, y):
+            adjacent_cells[(i, y)] = coordinates_dict[(i, y)]
+    for j in adjacents_y:
+        if (x, j) in coordinates_dict.keys() and (x, j) != (x, y):
+            adjacent_cells[(x, j)] = coordinates_dict[(x, j)]
+    return adjacent_cells
 
-    return {
-        **{
-            (i, y): coordinates_dict[(i, y)]
-            for i in adjacents_x
-            if (i, y) in coordinates_dict.keys() and (i, y) != (x, y)
-        },
-        **{
-            (x, j): coordinates_dict[(x, j)]
-            for j in adjacents_y
-            if (x, j) in coordinates_dict.keys() and (x, j) != (x, y)
-        },
+
+pipe_values = {"|", "-", "L", "J", "7", "F"}
+
+
+def get_start_pipe_kind(
+        coordinates_dict: Dict[Coordinates, str], start_coordinates: Coordinates
+):
+    adjacent_pipe_coordinates = {
+        coord
+        for coord in get_adjacent_cells(coordinates_dict, start_coordinates)
+        if coordinates_dict[coord] != "."
     }
+    for hypothetical_value in pipe_values:
+        hypothetical_entrances = to_entrances_coordinates(
+            start_coordinates, ".", hypothetical_value
+        )
+        if len(hypothetical_entrances.intersection(adjacent_pipe_coordinates)) == 2:
+            return hypothetical_value
+    else:
+        raise Exception("Oupsi oupsa!")
 
 
-# TODO rename to differentiate better coords and value
+# TODO combine first and last parameters to a tuple
 def to_entrances_coordinates(coordinates: Coordinates, start_value: str, pipe: str):
     _entrances = defaultdict(
         set,
         {
-            "|": {translate(coordinates, (-1, 0)), translate(coordinates, (1, 0))},
-            "-": {translate(coordinates, (0, -1)), translate(coordinates, (0, 1))},
-            "L": {translate(coordinates, (-1, 0)), translate(coordinates, (0, 1))},
-            "J": {translate(coordinates, (0, -1)), translate(coordinates, (-1, 0))},
-            "7": {translate(coordinates, (0, -1)), translate(coordinates, (1, 0))},
-            "F": {translate(coordinates, (1, 0)), translate(coordinates, (0, 1))},
+            "|": translate(coordinates, {(-1, 0), (1, 0)}),
+            "-": translate(coordinates, {(0, -1), (0, 1)}),
+            "L": translate(coordinates, {(-1, 0), (0, 1)}),
+            "J": translate(coordinates, {(0, -1), (-1, 0)}),
+            "7": translate(coordinates, {(0, -1), (1, 0)}),
+            "F": translate(coordinates, {(1, 0), (0, 1)}),
         },
     )
     _entrances["S"] = _entrances[start_value]
@@ -58,24 +74,33 @@ def start(maze: Dict[Coordinates, str]):
 @benchmark
 def part_one(matrix: List[str]):
     coordinates_dict = to_coordinates_dict(matrix)
-    breadcrumb = deque()
-    current_key, current_value = start(coordinates_dict)
+    breadcrumb = set()
+    starting_value = start(coordinates_dict)
+    start_pipe_kind = get_start_pipe_kind(coordinates_dict, starting_value[0])
+    current_key, current_value = starting_value
     while True:
-        breadcrumb.append(current_key)
+        breadcrumb.add(current_key)
         adjacent_cells = get_adjacent_cells(coordinates_dict, current_key)
         for k, v in adjacent_cells.items():
-            if k not in breadcrumb and current_key in to_entrances_coordinates(coordinates=k, start_value=v, pipe=v):
+            if k not in breadcrumb and k in to_entrances_coordinates(
+                    coordinates=current_key, start_value=start_pipe_kind, pipe=current_value
+            ):
                 current_key, current_value = (k, v)
-                print("worked")
                 break
         else:
             break
-        if current_value == "S":
-            break
 
-    print(breadcrumb)
-    return len(breadcrumb) / 2
+    assert len(breadcrumb) % 2 == 0
+    return int(len(breadcrumb) / 2)
+
+
+# TODO remove?
+def connects(current_key, current_value, k, start_pipe_kind, v):
+    return current_key in to_entrances_coordinates(
+        coordinates=k, start_value=start_pipe_kind, pipe=v
+    ) and k in to_entrances_coordinates(current_key, start_pipe_kind, current_value)
 
 
 if __name__ == "__main__":
+    assert part_one(parsed_input()) == 6903
     print(part_one(parsed_input()))
