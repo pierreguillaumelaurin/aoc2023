@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import defaultdict, deque
 from typing import Dict, List, Tuple
 
 from src.coordinates import Coordinates, to_coordinates_dict, translate
@@ -21,9 +21,7 @@ class Maze:
         self.start = next((k, v) for k, v in self._map.items() if v == "S")
         self.start = self.start[0], self._get_start_pipe_kind(self.start[0])
 
-    def _get_start_pipe_kind(
-            self, start_coordinates: Coordinates
-    ):
+    def _get_start_pipe_kind(self, start_coordinates: Coordinates):
         adjacent_pipe_coordinates = {
             coord
             for coord in self.get_adjacent_cells(start_coordinates)
@@ -38,9 +36,7 @@ class Maze:
         else:
             raise Exception("Oupsi oupsa!")
 
-    def get_adjacent_cells(
-            self, coordinates: Coordinates
-    ) -> Dict[Coordinates, str]:
+    def get_adjacent_cells(self, coordinates: Coordinates) -> Dict[Coordinates, str]:
         x, y = coordinates
         adjacents_x = x - 1, x, x + 1
         adjacents_y = y - 1, y, y + 1
@@ -80,17 +76,56 @@ def part_one(matrix: List[str]):
         adjacent_cells = maze.get_adjacent_cells(current_key)
         for k, v in adjacent_cells.items():
             if k not in breadcrumb and k in maze.get_entrances_coordinates(
-                    (current_key, current_value)
+                (current_key, current_value)
             ):
                 current_key, current_value = (k, v)
                 break
         else:
             break
 
-    assert len(breadcrumb) % 2 == 0
     return int(len(breadcrumb) / 2)
+
+
+def apply_shoelace_formula(coordinates: List[Coordinates]):
+    def inner(i: int, coords: Coordinates):
+        n = len(coordinates)
+        _, y = coords
+        return y * (coordinates[(i - 1) % n][0] - coordinates[(i + 1) % n][0])
+
+    return abs(int(
+        1 / 2 * sum(inner(i, coordinate) for i, coordinate in enumerate(coordinates))
+    ))
+
+
+def find_number_of_inner_points_with_pick_theorem(area: int, boundary_points: int):
+    holes = 0
+    return int(area - boundary_points / 2 - holes + 1)
+
+
+@benchmark
+def part_two(matrix: List[str]):
+    maze = Maze(matrix)
+    breadcrumb = []
+    current_key, current_value = maze.start
+    while True:
+        breadcrumb.append(current_key)
+        adjacent_cells = maze.get_adjacent_cells(current_key)
+        for k, v in adjacent_cells.items():
+            if k not in breadcrumb and k in maze.get_entrances_coordinates(
+                (current_key, current_value)
+            ):
+                current_key, current_value = (k, v)
+                break
+        else:
+            break
+
+    area = int(apply_shoelace_formula(breadcrumb))
+
+    return find_number_of_inner_points_with_pick_theorem(area, len(breadcrumb))
 
 
 if __name__ == "__main__":
     assert part_one(parsed_input()) == 6903
+    assert part_two(parsed_input()) == 265
     print(part_one(parsed_input()))
+    print(part_two(parsed_input()))
