@@ -92,9 +92,13 @@ def apply_shoelace_formula(coordinates: List[Coordinates]):
         _, y = coords
         return y * (coordinates[(i - 1) % n][0] - coordinates[(i + 1) % n][0])
 
-    return abs(int(
-        1 / 2 * sum(inner(i, coordinate) for i, coordinate in enumerate(coordinates))
-    ))
+    return abs(
+        int(
+            1
+            / 2
+            * sum(inner(i, coordinate) for i, coordinate in enumerate(coordinates))
+        )
+    )
 
 
 def find_number_of_inner_points_with_pick_theorem(area: int, boundary_points: int):
