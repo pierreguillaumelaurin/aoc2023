@@ -20,25 +20,32 @@ def to_int_tuple(str_list: List[str]):
 
 @cache
 def valid_arrangements_count(record: str, requirements: Tuple[int, ...]):
+    def can_create_next_block(record_, requirements_):
+        return (
+            len(record_) >= requirements_[0]
+            and "." not in record_[: requirements_[0]]
+            and (len(record_) == requirements_[0] or record_[requirements_[0]] != "#")
+        )
+
     if record == "" and requirements == ():
         return 1
     if record == "" and requirements != ():
         return 0
     if requirements == ():
         return 0 if "#" in record else 1
-    result = 0
-    if record[0] in ".?":
-        result += valid_arrangements_count(record[1:], requirements)
-    if record[0] in "#?":  # TODO see whatsup if we remove ?
-        if (
-            len(record) >= requirements[0]
-            and "." not in record[: requirements[0]]
-            and (len(record) == requirements[0] or record[requirements[0]] != "#")
-        ):  # TODO refactor
-            result += valid_arrangements_count(
-                record[requirements[0] + 1 :], requirements[1:]
-            )
-    return result
+    if record[0] == ".":
+        return valid_arrangements_count(record[1:], requirements)
+    if record[0] == "#" and can_create_next_block(record, requirements):
+        return valid_arrangements_count(record[requirements[0] + 1 :], requirements[1:])
+    if record[0] == "#" and not can_create_next_block(record, requirements):
+        return 0
+    if record[0] == "?" and can_create_next_block(record, requirements):
+        return valid_arrangements_count(
+            record[1:], requirements
+        ) + valid_arrangements_count(record[requirements[0] + 1 :], requirements[1:])
+    if record[0] == "?" and not can_create_next_block(record, requirements):
+        return valid_arrangements_count(record[1:], requirements)
+    raise ValueError("Oops! A case was not catched:", record, requirements)
 
 
 @benchmark
