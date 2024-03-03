@@ -18,6 +18,7 @@ def to_int_tuple(str_list: List[str]):
     return tuple(int(n) for n in str_list)
 
 
+@cache
 def valid_arrangements_count(record: str, requirements: Tuple[int, ...]):
     if record == "" and requirements == ():
         return 1
@@ -53,10 +54,19 @@ def part_one(lines: List[Tuple[str, ...]]):
 
 
 @benchmark
-def part_two(lines: List[str]):
-    pass
+def part_two(lines: List[Tuple[str, ...]]):
+    data = [
+        ("?".join([record] * 5), to_int_tuple(requirements.split(",")) * 5)
+        for (record, requirements) in lines
+    ]
+
+    return sum(
+        valid_arrangements_count(record, requirements) for record, requirements in data
+    )
 
 
 if __name__ == "__main__":
-    # assert part_one(parsed_input()) == 8022
+    assert part_one(parsed_input()) == 8022
     print(part_one(parsed_input()))
+    assert part_two(parsed_input()) == 4968620679637
+    print(part_two(parsed_input()))
