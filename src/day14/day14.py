@@ -44,15 +44,72 @@ def total_load(matrix: List[List[str]]):
     )
 
 
+def rotate_right(matrix: List[List[str]]):
+    return [list(t) for t in zip(*reversed(matrix))]
+
+
+def with_rocks_moved_west(matrix: List[List[str]]):
+    return rotate_right(
+        rotate_right(rotate_right(with_rocks_moved_north(rotate_right(matrix))))
+    )
+
+
+def with_rocks_moved_south(matrix: List[List[str]]):
+    return rotate_right(
+        rotate_right(with_rocks_moved_north(rotate_right(rotate_right(matrix))))
+    )
+
+
+def with_rocks_moved_east(matrix: List[List[str]]):
+    return rotate_right(
+        with_rocks_moved_north(rotate_right(rotate_right(rotate_right(matrix))))
+    )
+
+
+def do_cycle(matrix: List[List[str]]):
+    return with_rocks_moved_east(
+        with_rocks_moved_south(with_rocks_moved_west(with_rocks_moved_north(matrix)))
+    )
+
+
+def get_count_for_cycle_reset(matrix: List[List[str]]):
+    ref = []
+    first_count = 0
+    result = do_cycle(matrix)
+    while True:
+        result = do_cycle(result)
+        first_count += 1
+        if result in ref:
+            break
+        ref.append(result)
+
+    count = 0
+    ref = deepcopy(result)
+    while True:
+        result = do_cycle(result)
+        count += 1
+        if ref == result:
+            break
+    return first_count, count
+
+
 @benchmark
 def part_one(lines: List[List[str]]):
     return total_load(with_rocks_moved_north(lines))
 
 
 @benchmark
-def part_two(lines: List[str]):
-    pass
+def part_two(lines: List[List[str]]):
+    first_count, count = get_count_for_cycle_reset(lines)
+    number_of_cycle_equivalent_to_a_billion = (
+        (1_000_000_000 - first_count) % count
+    )
+    matrix = lines
+    for _ in range(first_count + number_of_cycle_equivalent_to_a_billion):
+        matrix = do_cycle(matrix)
+    return total_load(matrix)
 
 
 if __name__ == "__main__":
     print(part_one(parsed_input()))
+    print(part_two(parsed_input()))

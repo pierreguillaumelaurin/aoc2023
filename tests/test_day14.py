@@ -1,6 +1,11 @@
-from copy import deepcopy
-
-from src.day14.day14 import part_one, total_load, with_rocks_moved_north
+from src.day14.day14 import (
+    do_cycle,
+    part_one,
+    part_two,
+    rotate_right,
+    total_load,
+    with_rocks_moved_north,
+)
 
 EXAMPLE_WITH_ROCKS_MOVED_NORTH = [
     ["O", "O", "O", "O", ".", "#", ".", "O", ".", "."],
@@ -37,5 +42,44 @@ def test_total_load():
     assert total_load(EXAMPLE_WITH_ROCKS_MOVED_NORTH) == 136
 
 
+def test_rotate_right():
+    result = rotate_right(EXAMPLE)
+    assert result[0] == ".#...#.O.."
+
+
+def test_do_one_cycle():
+    assert do_cycle(EXAMPLE) == [
+        [".", ".", ".", ".", ".", "#", ".", ".", ".", "."],
+        [".", ".", ".", ".", "#", ".", ".", ".", "O", "#"],
+        [".", ".", ".", "O", "O", "#", "#", ".", ".", "."],
+        [".", "O", "O", "#", ".", ".", ".", ".", ".", "."],
+        [".", ".", ".", ".", ".", "O", "O", "O", "#", "."],
+        [".", "O", "#", ".", ".", ".", "O", "#", ".", "#"],
+        [".", ".", ".", ".", "O", "#", ".", ".", ".", "."],
+        [".", ".", ".", ".", ".", ".", "O", "O", "O", "O"],
+        ["#", ".", ".", ".", "O", "#", "#", "#", ".", "."],
+        ["#", ".", ".", "O", "O", "#", ".", ".", ".", "."],
+    ]
+
+
+def test_do_two_cycles():
+    assert do_cycle(do_cycle(EXAMPLE)) == [
+        [".", ".", ".", ".", ".", "#", ".", ".", ".", "."],
+        [".", ".", ".", ".", "#", ".", ".", ".", "O", "#"],
+        [".", ".", ".", ".", ".", "#", "#", ".", ".", "."],
+        [".", ".", "O", "#", ".", ".", ".", ".", ".", "."],
+        [".", ".", ".", ".", ".", "O", "O", "O", "#", "."],
+        [".", "O", "#", ".", ".", ".", "O", "#", ".", "#"],
+        [".", ".", ".", ".", "O", "#", ".", ".", ".", "O"],
+        [".", ".", ".", ".", ".", ".", ".", "O", "O", "O"],
+        ["#", ".", ".", "O", "O", "#", "#", "#", ".", "."],
+        ["#", ".", "O", "O", "O", "#", ".", ".", ".", "O"],
+    ]
+
+
 def test_part_one():
-    part_one(EXAMPLE)
+    assert part_one(EXAMPLE) == 136
+
+
+def test_part_two():
+    assert part_two(EXAMPLE) == 64
