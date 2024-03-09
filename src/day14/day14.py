@@ -115,8 +115,8 @@ def part_two(lines: List[List[str]]):
     count_before_loop_starts = get_count_before_loop_starts(lines)
     count = get_count_for_loop_to_reset(lines, count_before_loop_starts)
     number_of_cycle_equivalent_to_a_billion = (
-            (1_000_000_000 - count_before_loop_starts) % count
-    )
+        1_000_000_000 - count_before_loop_starts
+    ) % count
     matrix = lines
     for _ in range(count_before_loop_starts + number_of_cycle_equivalent_to_a_billion):
         matrix = do_cycle(matrix)

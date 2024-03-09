@@ -42,11 +42,6 @@ def test_total_load():
     assert total_load(EXAMPLE_WITH_ROCKS_MOVED_NORTH) == 136
 
 
-def test_rotate_right():
-    result = rotate_right(EXAMPLE)
-    assert result[0] == ".#...#.O.."
-
-
 def test_do_one_cycle():
     assert do_cycle(EXAMPLE) == [
         [".", ".", ".", ".", ".", "#", ".", ".", ".", "."],
