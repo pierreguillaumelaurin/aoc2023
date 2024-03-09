@@ -72,25 +72,37 @@ def do_cycle(matrix: List[List[str]]):
     )
 
 
-def get_count_for_cycle_reset(matrix: List[List[str]]):
-    ref = []
-    first_count = 0
+def get_count_before_loop_starts(matrix: List[List[str]]):
+    pass_cycle_results = []
+    count = 0
     result = do_cycle(matrix)
     while True:
         result = do_cycle(result)
-        first_count += 1
-        if result in ref:
+        count += 1
+        if result in pass_cycle_results:
             break
-        ref.append(result)
+        pass_cycle_results.append(result)
+    return count
 
+
+def to_state_at_loop_beginning(matrix: List[List[str]], count_before_loop_starts: int):
+    result = matrix
+    for _ in range(count_before_loop_starts - 1):
+        result = do_cycle(result)
+    return result
+
+
+def get_count_for_loop_to_reset(matrix: List[List[str]], count_before_loop_starts: int):
     count = 0
-    ref = deepcopy(result)
+
+    result = to_state_at_loop_beginning(matrix, count_before_loop_starts)
+    loop_beginning = result
     while True:
         result = do_cycle(result)
         count += 1
-        if ref == result:
+        if loop_beginning == result:
             break
-    return first_count, count
+    return count
 
 
 @benchmark
@@ -100,16 +112,18 @@ def part_one(lines: List[List[str]]):
 
 @benchmark
 def part_two(lines: List[List[str]]):
-    first_count, count = get_count_for_cycle_reset(lines)
+    count_before_loop_starts = get_count_before_loop_starts(lines)
+    count = get_count_for_loop_to_reset(lines, count_before_loop_starts)
     number_of_cycle_equivalent_to_a_billion = (
-        (1_000_000_000 - first_count) % count
+            (1_000_000_000 - count_before_loop_starts) % count
     )
     matrix = lines
-    for _ in range(first_count + number_of_cycle_equivalent_to_a_billion):
+    for _ in range(count_before_loop_starts + number_of_cycle_equivalent_to_a_billion):
         matrix = do_cycle(matrix)
     return total_load(matrix)
 
 
 if __name__ == "__main__":
     print(part_one(parsed_input()))
+    assert part_two(parsed_input()) == 108404
     print(part_two(parsed_input()))
