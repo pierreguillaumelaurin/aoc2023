@@ -17,11 +17,41 @@ def lines_above_horizontal_reflection_line(matrix: List[list | str]):
         above = matrix[:i][::-1]
         below = matrix[i:]
 
-        symmetrical_part_above = above[:len(below)]
-        symmetrical_part_below = below[:len(above)]
+        symmetrical_part_above = above[: len(below)]
+        symmetrical_part_below = below[: len(above)]
         if symmetrical_part_above == symmetrical_part_below:
             return i
     return 0
+
+
+def lines_above_horizontal_reflection_line_when_removing_smudge(
+    matrix: List[list | str],
+):
+    def cell_mismatches_count(row_above: List[str], row_below: List[str]):
+        return sum(
+            0 if cell_above == cell_below else 1
+            for cell_above, cell_below in zip(row_above, row_below)
+        )
+
+    for i in range(1, len(matrix)):
+        above = matrix[:i][::-1]
+        below = matrix[i:]
+
+        if (
+            sum(
+                cell_mismatches_count(row_above, row_below)
+                for row_above, row_below in zip(above, below)
+            )
+            == 1
+        ):
+            return i
+    return 0
+
+
+def lines_above_vertical_reflection_line_when_removing_smudge(matrix: List[list | str]):
+    return lines_above_horizontal_reflection_line_when_removing_smudge(
+        rotate_left(matrix)
+    )
 
 
 def lines_above_vertical_reflection_line(matrix: List[str]):
@@ -37,69 +67,11 @@ def part_one(matrixes: List[List[str]]):
     )
 
 
-def switched(character: str):
-    match character:
-        case ".":
-            return "#"
-        case "#":
-            return "."
-        case _:
-            raise ValueError("Invalid character!", character)
-
-
-def lines_above_vertical_reflection_line_when_controlling_for_smudge(matrix: List[str]):
-    original_result = lines_above_vertical_reflection_line(matrix)
-    for i in range(len(rotate_left(matrix))):
-        for j in range(len(rotate_left(matrix)[i])):
-            modified_matrix = [[cell for cell in line] for line in rotate_left(matrix)]
-            modified_matrix[i][j] = switched(modified_matrix[i][j])
-            if (
-                    lines_above_vertical_reflection_line(modified_matrix)
-                    != 0 and lines_above_vertical_reflection_line(modified_matrix) != original_result
-            ):
-                return lines_above_vertical_reflection_line(modified_matrix)
-            if (
-                lines_above_horizontal_reflection_line(modified_matrix)
-                != 0
-            ):
-                return lines_above_horizontal_reflection_line(modified_matrix)
-    return 0
-
-
-def lines_above_horizontal_reflection_line_when_controlling_for_smudge(
-    matrix: List[str],
-):
-    original_result = lines_above_horizontal_reflection_line(matrix)
-    for i in range(len(matrix)):
-        for j in range(len(matrix[i])):
-            modified_matrix = [[cell for cell in line] for line in matrix]
-            modified_matrix[i][j] = switched(modified_matrix[i][j])
-            if (
-                lines_above_horizontal_reflection_line(modified_matrix)
-                != 0 and lines_above_horizontal_reflection_line(modified_matrix) != original_result
-            ):
-                return lines_above_horizontal_reflection_line(modified_matrix)
-            if (
-                    lines_above_vertical_reflection_line(modified_matrix)
-                    != 0
-            ):
-                return lines_above_vertical_reflection_line(modified_matrix)
-    return 0
-
-
 @benchmark
 def part_two(matrixes: List[List[str]]):
-    print('errors',  len(list(test for matrix in matrixes if (test :=  (
-            100
-            * lines_above_horizontal_reflection_line_when_controlling_for_smudge(matrix)
-        ) or lines_above_vertical_reflection_line_when_controlling_for_smudge(matrix)) == 0)))
-
-
     return sum(
-        (
-            100
-            * lines_above_horizontal_reflection_line_when_controlling_for_smudge(matrix)
-        ) or lines_above_vertical_reflection_line_when_controlling_for_smudge(matrix)
+        lines_above_vertical_reflection_line_when_removing_smudge(matrix)
+        or (100 * lines_above_horizontal_reflection_line_when_removing_smudge(matrix))
         for matrix in matrixes
     )
 
@@ -110,3 +82,4 @@ if __name__ == "__main__":
         print(part_one(parsed_input(raw_input)))
         assert part_one(parsed_input(raw_input)) == 34821
         print(part_two(parsed_input(raw_input)))
+        assert part_two(parsed_input(raw_input)) == 36919
