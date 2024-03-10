@@ -13,26 +13,15 @@ def rotate_left(matrix: List[str]):
 
 
 def lines_above_horizontal_reflection_line(matrix: List[list | str]):
-    def is_horizontal_index(one_based_index: int):
-        if len(matrix[:one_based_index]) < len(matrix[one_based_index:]):
-            return matrix[:one_based_index] == list(
-                reversed(matrix[one_based_index : one_based_index * 2])
-            )
-        symmetry_beginning_index = one_based_index - len(matrix[one_based_index:])
-        return matrix[symmetry_beginning_index:one_based_index] == list(
-            reversed(matrix[one_based_index:])
-        )
+    for i in range(1, len(matrix)):
+        above = matrix[:i][::-1]
+        below = matrix[i:]
 
-    def find_horizontal_index(horizontal_index_candidates: List[int]):
-        return next(
-            (i for i in horizontal_index_candidates if is_horizontal_index(i + 1)),
-            -1,
-        )
-
-    horizontal_line_indexes_candidates = [
-        i for i in range(len(matrix[:-1])) if matrix[i] == matrix[i + 1]
-    ]
-    return find_horizontal_index(horizontal_line_indexes_candidates) + 1
+        symmetrical_part_above = above[:len(below)]
+        symmetrical_part_below = below[:len(above)]
+        if symmetrical_part_above == symmetrical_part_below:
+            return i
+    return 0
 
 
 def lines_above_vertical_reflection_line(matrix: List[str]):
