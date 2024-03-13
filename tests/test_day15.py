@@ -1,6 +1,6 @@
-from src.day15.day15 import part_one
+from src.day15.day15 import imperative_hash_algorithm
 
 FIRST_EXAMPLE = "rn=1"
 
 def test_part_one():
-    assert part_one(FIRST_EXAMPLE) == 30
+    assert imperative_hash_algorithm(FIRST_EXAMPLE) == 30
