@@ -62,7 +62,7 @@ def part_two(line: str):
                 lens for lens in boxes[hash_algorithm(label)] if lens.label != label
             ]
         else:
-            label, focal_length = lens.split('=')
+            label, focal_length = lens.split("=")
             new = Lens(label, int(focal_length))
             box = boxes[hash_algorithm(new.label)]  # TODO reuse
             boxes[hash_algorithm(new.label)] = box = [
@@ -86,5 +86,3 @@ if __name__ == "__main__":
 
     print(part_two(parsed_input()))
     assert part_two(parsed_input()) == 258826
-
-

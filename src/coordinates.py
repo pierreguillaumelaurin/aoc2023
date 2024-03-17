@@ -12,12 +12,8 @@ def to_coordinates_dict(matrix: List[str]) -> Dict[Coordinates, str]:
     }
 
 
-def to_coordinates_dict(matrix: List[str]) -> Dict[Coordinates, str]:
-    return {
-        Coordinates(x, y): cell
-        for x, line in enumerate(matrix)
-        for y, cell in enumerate(line)
-    }
+def add_coordinates(first: Coordinates, second: Coordinates):
+    return Coordinates(first[0] + second[0], first[1] + second[1])
 
 
 def translate(base: Coordinates, coordinates: set[Coordinates]):
