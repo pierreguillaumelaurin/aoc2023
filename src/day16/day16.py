@@ -1,10 +1,9 @@
 import sys
-from typing import List, Set
+from collections import deque
+from typing import List, Set, Tuple
 
 from src.coordinates import Coordinates, add_coordinates, to_coordinates_dict
 from src.utils import benchmark
-
-sys.setrecursionlimit(20000)
 
 
 def parsed_input():
@@ -17,55 +16,44 @@ class Matrix:
         self._map = to_coordinates_dict(matrix)
 
     def get_energized_tile_count(
-        self, start: Coordinates, starting_direction: Coordinates
+            self, start: Coordinates, starting_direction: Coordinates
     ):
         def is_in_loop(
-            move: Coordinates, direction: Coordinates, energized_tiles: Set[Coordinates]
+                move: Coordinates, direction: Coordinates, moves_already_made: Set[Coordinates]
         ):
-            previous_move = add_coordinates(
-                move, (-1 * direction[0], -1 * direction[0])
-            )
+            print(moves_already_made)
+            return (move, direction) in moves_already_made
 
-            return (
-                move in self._map.keys()
-                and previous_move in self._map.keys()
-                and (
-                    (self._map[previous_move] == "|" and abs(direction[0]) == 1)
-                    or (self._map[previous_move] == "-" and abs(direction[1]) == 1)
-                )
-                and previous_move in energized_tiles
-                and move in energized_tiles
-            )
-
-        def next_moves(
-            move: Coordinates, direction: Coordinates, energized_tiles: Set[Coordinates]
-        ):
-            if move not in self._map.keys() or is_in_loop(
-                move, direction, energized_tiles
-            ):
-                return energized_tiles
-            print(is_in_loop(move, direction, energized_tiles))
+        moves_already_made = set()
+        first_move = ((0, 0), (0, 1))
+        moves_to_make = deque()
+        moves_to_make.append(first_move)
+        while moves_to_make:
+            move, direction = moves_to_make.popleft()
+            if move not in self._map.keys() or (move, direction) in moves_already_made:
+                continue
+            moves_already_made.add((move, direction))
             match self._map[move]:
                 case ".":
                     next_move = add_coordinates(move, direction)
-                    return next_moves(next_move, direction, energized_tiles | {move})
+                    moves_to_make.append((next_move, direction))
                 case "|" if abs(direction[0]) == 1 and direction[1] == 0:
                     next_move = add_coordinates(move, direction)
-                    return next_moves(next_move, direction, energized_tiles | {move})
+                    moves_to_make.append((next_move, direction))
                 case "-" if direction[0] == 0 and abs(direction[1]) == 1:
                     next_move = add_coordinates(move, direction)
-                    return next_moves(next_move, direction, energized_tiles | {move})
+                    moves_to_make.append((next_move, direction))
                 case "/":
                     next_direction = (-1 * direction[1], -1 * direction[0])
                     next_move = add_coordinates(move, next_direction)
-                    return next_moves(
-                        next_move, next_direction, energized_tiles | {move}
+                    moves_to_make.append(
+                        (next_move, next_direction)
                     )
                 case "\\":
                     next_direction = (direction[1], direction[0])
                     next_move = add_coordinates(move, next_direction)
-                    return next_moves(
-                        next_move, next_direction, energized_tiles | {move}
+                    moves_to_make.append(
+                        (next_move, next_direction)
                     )
                 case "|":
                     next_first_direction = (
@@ -75,12 +63,12 @@ class Matrix:
                     next_first_move = add_coordinates(move, next_first_direction)
                     next_second_direction = (-1 * direction[1], -1 * direction[0])
                     next_second_move = add_coordinates(move, next_second_direction)
-                    return next_moves(
-                        next_first_move, next_first_direction, energized_tiles | {move}
-                    ) | next_moves(
-                        next_second_move,
-                        next_second_direction,
-                        energized_tiles | {move},
+                    moves_to_make.append(
+                        (next_first_move, next_first_direction)
+                    )
+                    moves_to_make.append(
+                        (next_second_move,
+                         next_second_direction)
                     )
                 case "-":
                     next_first_direction = (
@@ -90,19 +78,19 @@ class Matrix:
                     next_first_move = add_coordinates(move, next_first_direction)
                     next_second_direction = (-1 * direction[1], -1 * direction[0])
                     next_second_move = add_coordinates(move, next_second_direction)
-                    return next_moves(
-                        next_first_move, next_first_direction, energized_tiles | {move}
-                    ) | next_moves(
-                        next_second_move,
-                        next_second_direction,
-                        energized_tiles | {move},
+                    moves_to_make.append(
+                        (next_first_move, next_first_direction)
+                    )
+                    moves_to_make.append(
+                        (next_second_move,
+                         next_second_direction)
                     )
                 case _:
                     raise ValueError(
                         f"Oops! Here is the context: next move={move}, direction={direction}"
                     )
 
-        return len(next_moves(start, starting_direction, set()))
+        return len({coordinate for coordinate, _ in moves_already_made})
 
 
 @benchmark
