@@ -1,4 +1,4 @@
-from src.day18.day18 import part_one
+from src.day18.day18 import part_one, part_two
 
 EXAMPLE = [
     "R 6 (#70c710)",
@@ -20,3 +20,6 @@ EXAMPLE = [
 
 def test_part_one():
     assert part_one(EXAMPLE) == 62
+
+def test_part_two():
+    assert part_two(EXAMPLE) == 952408144115

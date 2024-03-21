@@ -1,6 +1,6 @@
 from typing import List, Literal
 
-from src.coordinates import Coordinates, add_coordinates
+from src.coordinates import Coordinates, add_coordinates, multiply_coordinates
 from src.utils import benchmark
 
 
@@ -11,6 +11,16 @@ def parsed_input():
 
 def to_direction(acronym: Literal['U', 'R', 'D', 'L']):
     match acronym:
+        case '0':
+            return (0, 1)
+        case '1':
+            return (1, 0)
+        case '2':
+            return (0, -1)
+        case '3':
+            return (-1, 0)
+        case 'L':
+            return (0, -1)
         case 'U':
             return (-1, 0)
         case 'R':
@@ -20,7 +30,7 @@ def to_direction(acronym: Literal['U', 'R', 'D', 'L']):
         case 'L':
             return (0, -1)
         case _:
-            raise ('Oops, an invalid acronym appeared:', acronym)
+            raise Exception('Oops, an invalid acronym appeared:', acronym)
 
 
 def apply_shoelace_formula(coordinates: List[Coordinates]):
@@ -40,21 +50,40 @@ def apply_shoelace_formula(coordinates: List[Coordinates]):
 def find_number_of_inner_points_with_pick_theorem(area: int, boundary_points: int):
     holes = 0
     return int(area - boundary_points / 2 - holes + 1)
+
 @benchmark
 def part_one(matrix: List[str]):
     # get perimeter positions and value
-    perimeter_positions = [(0,0)]
+    corner_positions = [(0, 0)]
+    perimeter_length = 0
     for line in matrix:
         acronym, meters, _ = line.split()
-        for _ in range(int(meters)):
-            perimeter_positions.append(add_coordinates(perimeter_positions[-1], to_direction(acronym)))
-    perimeter_value = len(perimeter_positions) - 1
+        corner_positions.append(add_coordinates(corner_positions[-1], multiply_coordinates(to_direction(acronym), (int(meters), int(meters)))))
+        perimeter_length += int(meters)
     # total value
-    area = apply_shoelace_formula(perimeter_positions)
-    inner_area = find_number_of_inner_points_with_pick_theorem(area, perimeter_value)
+    area = apply_shoelace_formula(corner_positions)
+    inner_area = find_number_of_inner_points_with_pick_theorem(area, perimeter_length)
 
-    return perimeter_value + inner_area
+    return perimeter_length + inner_area
+
+@benchmark
+def part_two(matrix: List[str]):
+    # get perimeter positions and value
+    corner_positions = [(0, 0)]
+    perimeter_length = 0
+    for line in matrix:
+        *meters, acronym = line[line.index('#') + 1:-1]
+        corner_positions.append(add_coordinates(corner_positions[-1], multiply_coordinates(to_direction(acronym), (int("".join(meters), 16), int("".join(meters), 16)))))
+        perimeter_length += int("".join(meters), 16)
+    # total value
+    area = apply_shoelace_formula(corner_positions)
+    inner_area = find_number_of_inner_points_with_pick_theorem(area, perimeter_length)
+
+    return perimeter_length + inner_area
+
 
 
 if __name__ == "__main__":
+    assert part_one(parsed_input()) == 50746
     print(part_one(parsed_input()))
+    print(part_two(parsed_input()))
