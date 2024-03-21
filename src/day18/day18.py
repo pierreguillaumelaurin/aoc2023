@@ -58,13 +58,18 @@ def part_one(matrix: List[str]):
     perimeter_length = 0
     for line in matrix:
         acronym, meters, _ = line.split()
-        corner_positions.append(add_coordinates(corner_positions[-1], multiply_coordinates(to_direction(acronym), (int(meters), int(meters)))))
+        next_corner_position = add_coordinates(corner_positions[-1],
+                                      multiply_coordinates(to_direction(acronym), (int(meters), int(meters))))
+        corner_positions.append(next_corner_position)
         perimeter_length += int(meters)
     # total value
     area = apply_shoelace_formula(corner_positions)
     inner_area = find_number_of_inner_points_with_pick_theorem(area, perimeter_length)
 
     return perimeter_length + inner_area
+
+def hexa_list_to_int(meters: str):
+    return int("".join(meters), 16)
 
 @benchmark
 def part_two(matrix: List[str]):
@@ -73,8 +78,10 @@ def part_two(matrix: List[str]):
     perimeter_length = 0
     for line in matrix:
         *meters, acronym = line[line.index('#') + 1:-1]
-        corner_positions.append(add_coordinates(corner_positions[-1], multiply_coordinates(to_direction(acronym), (int("".join(meters), 16), int("".join(meters), 16)))))
-        perimeter_length += int("".join(meters), 16)
+        next_corner_position = add_coordinates(corner_positions[-1], multiply_coordinates(to_direction(acronym), (
+            hexa_list_to_int(meters), hexa_list_to_int(meters))))
+        corner_positions.append(next_corner_position)
+        perimeter_length += hexa_list_to_int(meters)
     # total value
     area = apply_shoelace_formula(corner_positions)
     inner_area = find_number_of_inner_points_with_pick_theorem(area, perimeter_length)
@@ -83,7 +90,9 @@ def part_two(matrix: List[str]):
 
 
 
+
 if __name__ == "__main__":
     assert part_one(parsed_input()) == 50746
     print(part_one(parsed_input()))
+    assert part_two(parsed_input()) == 70086216556038
     print(part_two(parsed_input()))
