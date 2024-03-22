@@ -21,5 +21,6 @@ EXAMPLE = [
 def test_part_one():
     assert part_one(EXAMPLE) == 62
 
+
 def test_part_two():
     assert part_two(EXAMPLE) == 952408144115
