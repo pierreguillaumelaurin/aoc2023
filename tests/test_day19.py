@@ -1,4 +1,8 @@
-from src.day19.day19 import part_one, to_python_function
+from src.day19.day19 import part_one, part_two
+from src.day19.day19_part_one_alternate_solution import (
+    part_one_alternate,
+    to_python_function,
+)
 
 EXAMPLE = [
     "px{a<2006:qkq,m>2090:A,rfg}",
@@ -24,9 +28,17 @@ EXAMPLE = [
 def test_to_python_function():
     assert (
         to_python_function("x{a<2006:qkq,m>2090:A,rfg}")
-        == "def x(x,m,a,s):\n    if a<2006:\n        return qkq(w)\n    if m>2090:\n        return A(w)\n    return rfg(w)"
+        == "def x(x,m,a,s):\n    if a<2006:\n        return qkq(x,m,a,s)\n    if m>2090:\n        return A(x,m,a,s)\n    return rfg(x,m,a,s)"
     )
 
 
 def test_part_one():
     assert part_one(EXAMPLE) == 19114
+
+
+def test_part_one_alternate():
+    assert part_one_alternate(EXAMPLE) == 19114
+
+
+def test_part_two():
+    assert part_two(EXAMPLE) == 167409079868000

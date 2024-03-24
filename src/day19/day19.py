@@ -1,5 +1,6 @@
 import re
-from typing import List, Tuple, TypedDict
+from math import prod
+from typing import List, Literal, Tuple, TypedDict
 
 from src.utils import benchmark
 
@@ -9,87 +10,120 @@ def parsed_input():
         return [line.strip() for line in data.readlines()]
 
 
-def to_python_function(workflow: str):
-    def parse_conditions(parts_: List[Tuple[str, ...]]) -> str:
-        first_part = parts_[0]
-        if len(first_part) == 1:
-            return f"    return {first_part[0]}(x,m,a,s)"
-        (guard, value) = first_part
-        return f"    if {guard}:\n        return {value}(x,m,a,s)\n" + parse_conditions(
-            parts_[1:]
-        )
+@benchmark
+def part_one(lines: List[str]):
+    class Part(TypedDict):
+        x: int
+        m: int
+        a: int
+        s: int
 
-    name, cases = (
-        workflow[: workflow.index("{")],
-        workflow[workflow.index("{") + 1 : workflow.index("}")],
-    )
-    parts = [tuple(part for part in case.split(":")) for case in cases.split(",")]
-    curated_name = "in_" if name == "in" else name
-    return f"def {curated_name}(x,m,a,s):\n" + parse_conditions(parts)
+    def to_part(raw_part: str) -> Part:
+        part = {}
+        for raw_rating in raw_part.split(","):
+            rating, _, *raw_number = raw_rating
+            number = int("".join(raw_number))
+            part[rating] = number
+        return part
 
+    raw_workflows, parts = lines[: lines.index("")], lines[lines.index("") + 1 :]
+    workflows = {
+        line[: line.index("{")]: line[line.index("{") + 1 : -1]
+        for line in raw_workflows
+    }
 
-def to_categories(part: str):
-    return [match.group() for match in re.finditer(r"\d+", part)]
+    def parse(part: Part, workflow_id: str):
+        if workflow_id == "A":
+            return sum(part.values())
+        if workflow_id == "R":
+            return 0
+        workflow_conditions = workflows[workflow_id].split(",")
+        for condition in workflow_conditions[:-1]:
+            (rating, comparator, *raw_number), next_id = condition.split(":")
+            number = int("".join(raw_number))
+
+            match comparator:
+                case "<":
+                    if part[rating] < number:
+                        return parse(part, next_id)
+                case ">":
+                    if part[rating] > number:
+                        return parse(part, next_id)
+                case _:
+                    raise ValueError(
+                        "Oops! A value occured which shouldn't have", comparator
+                    )
+        return parse(part, workflow_conditions[-1])
+
+    return sum(parse(to_part(raw_part[1:-1]), "in") for raw_part in parts)
 
 
 @benchmark
-def part_one(lines: List[str]):
-    scope = {"ratings": 0}
+def part_two(lines: List[str]):
+    class ValidRatingRanges(TypedDict):
+        x: Tuple[int, int]
+        m: Tuple[int, int]
+        a: Tuple[int, int]
+        s: Tuple[int, int]
 
-    exec(
-        """def A(x,m,a,s):
-    global ratings
-    ratings += sum((x,m,a,s))""",
-        scope,
-    )
+    raw_workflows = lines[: lines.index("")]
+    workflows = {
+        line[: line.index("{")]: line[line.index("{") + 1 : -1]
+        for line in raw_workflows
+    }
 
-    exec(
-        """def R(x,m,a,s):
-    pass
-""",
-        scope,
-    )
+    def parse(part: ValidRatingRanges, workflow_id: str):
+        if workflow_id == "A":
+            return prod(end - start + 1 for start, end in part.values())
+        if workflow_id == "R":
+            return 0
+        workflow_conditions = workflows[workflow_id].split(",")
+        result = 0
+        filtered_part = part
+        for condition in workflow_conditions[:-1]:
+            (rating, comparator, *raw_number), next_id = condition.split(":")
+            number = int("".join(raw_number))
 
-    workflows, parts = lines[: lines.index("")], lines[lines.index("") + 1 :]
-    # register workflow in-memory
-    for workflow in workflows:
-        exec(to_python_function(workflow), scope)
+            match comparator:
+                case "<":
+                    if part[rating][1] < number:
+                        result += parse(part, next_id)
+                    else:
+                        next_part = {
+                            **filtered_part,
+                            rating: (filtered_part[rating][0], number - 1),
+                        }
+                        filtered_part = {
+                            **filtered_part,
+                            rating: (number, filtered_part[rating][1]),
+                        }
+                        result += parse(next_part, next_id)
+                case ">":
+                    if part[rating][0] > number:
+                        result += parse(part, next_id)
+                    else:
+                        next_part = {
+                            **filtered_part,
+                            rating: (number + 1, filtered_part[rating][1]),
+                        }
+                        filtered_part = {
+                            **filtered_part,
+                            rating: (filtered_part[rating][0], number),
+                        }
+                        result += parse(next_part, next_id)
+                case _:
+                    raise ValueError(
+                        "Oops! A value occured which shouldn't have", comparator
+                    )
+        result += parse(filtered_part, workflow_conditions[-1])
+        return result
 
-    for part in parts:
-        categories = to_categories(part)
-        exec(f'in_({",".join(categories)})', scope)
-    return scope["ratings"]
-
-@benchmark
-def part_one(lines: List[str]):
-    scope = {"ratings": 0}
-
-    exec(
-        """def A(x,m,a,s):
-    global ratings
-    ratings += sum((x,m,a,s))""",
-        scope,
-    )
-
-    exec(
-        """def R(x,m,a,s):
-    pass
-""",
-        scope,
-    )
-
-    workflows, parts = lines[: lines.index("")], lines[lines.index("") + 1 :]
-    # register workflow in-memory
-    for workflow in workflows:
-        exec(to_python_function(workflow), scope)
-
-    for part in parts:
-        categories = to_categories(part)
-        exec(f'in_({",".join(categories)})', scope)
-    return scope["ratings"]
+    possible_ratings = {"x": (1, 4000), "m": (1, 4000), "a": (1, 4000), "s": (1, 4000)}
+    return parse(possible_ratings, "in")
 
 
 if __name__ == "__main__":
-    assert part_one(parsed_input()) == 432434
     print(part_one(parsed_input()))
-    # print(part_two(parsed_input()))
+    assert part_one(parsed_input()) == 432434
+    print(part_two(parsed_input()))
+    assert part_two(parsed_input()) == 132557544578569
