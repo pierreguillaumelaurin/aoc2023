@@ -1,11 +1,15 @@
 from collections import deque
 
+
 def parsed_input():
     with open("./input.dat", "r") as data:
         return [line.strip() for line in data.readlines()]
 
+
 grid = parsed_input()
-sr, sc = next((r, c) for r, row in enumerate(grid) for c, ch in enumerate(row) if ch == "S")
+sr, sc = next(
+    (r, c) for r, row in enumerate(grid) for c, ch in enumerate(row) if ch == "S"
+)
 
 assert len(grid) == len(grid[0])
 
@@ -30,7 +34,14 @@ def fill(sr, sc, ss):
             continue
 
         for nr, nc in [(r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1)]:
-            if nr < 0 or nr >= len(grid) or nc < 0 or nc >= len(grid[0]) or grid[nr][nc] == "#" or (nr, nc) in seen:
+            if (
+                nr < 0
+                or nr >= len(grid)
+                or nc < 0
+                or nc >= len(grid[0])
+                or grid[nr][nc] == "#"
+                or (nr, nc) in seen
+            ):
                 continue
             seen.add((nr, nc))
             q.append((nr, nc, s - 1))
@@ -62,9 +73,12 @@ large_br = fill(0, 0, size * 3 // 2 - 1)
 large_bl = fill(0, size - 1, size * 3 // 2 - 1)
 
 print(
-    odd * odd_points +
-    even * even_points +
-    corner_t + corner_r + corner_b + corner_l +
-    (grid_width + 1) * (small_tr + small_tl + small_br + small_bl) +
-    grid_width * (large_tr + large_tl + large_br + large_bl)
+    odd * odd_points
+    + even * even_points
+    + corner_t
+    + corner_r
+    + corner_b
+    + corner_l
+    + (grid_width + 1) * (small_tr + small_tl + small_br + small_bl)
+    + grid_width * (large_tr + large_tl + large_br + large_bl)
 )

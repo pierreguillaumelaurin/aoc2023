@@ -16,7 +16,7 @@ def get_adjacent_cells(coordinates: Coordinates, matrix: List[List[str]]):
     return [
         (r, c)
         for (r, c) in adjacent_cells
-        if 0 < r < len(matrix) and 0 < c < len(matrix[0])
+        if 0 <= r < len(matrix) and 0 <= c < len(matrix[0])
     ]
 
 
@@ -65,7 +65,14 @@ def part_two(matrix: List[List[str]]):
                 continue
 
             for nr, nc in [(r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1)]:
-                if nr < 0 or nr >= len(matrix) or nc < 0 or nc >= len(matrix[0]) or matrix[nr][nc] == "#" or (nr, nc) in seen:
+                if (
+                    nr < 0
+                    or nr >= len(matrix)
+                    or nc < 0
+                    or nc >= len(matrix[0])
+                    or matrix[nr][nc] == "#"
+                    or (nr, nc) in seen
+                ):
                     continue
                 seen.add((nr, nc))
                 q.append((nr, nc, s - 1))
@@ -101,12 +108,16 @@ def part_two(matrix: List[List[str]]):
     large_bl = fill((0, size - 1), size * 3 // 2 - 1)
 
     return (
-        odd_matrices * odd_matrices_points +
-        even_matrices * even_matrices_points +
-        corner_t + corner_r + corner_b + corner_l +
-        (matrix_width + 1) * (small_tr + small_tl + small_br + small_bl) +
-        matrix_width * (large_tr + large_tl + large_br + large_bl)
+        odd_matrices * odd_matrices_points
+        + even_matrices * even_matrices_points
+        + corner_t
+        + corner_r
+        + corner_b
+        + corner_l
+        + (matrix_width + 1) * (small_tr + small_tl + small_br + small_bl)
+        + matrix_width * (large_tr + large_tl + large_br + large_bl)
     )
+
 
 if __name__ == "__main__":
     assert part_one(parsed_input()) == 3737
