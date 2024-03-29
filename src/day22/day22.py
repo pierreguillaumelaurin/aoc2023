@@ -12,7 +12,6 @@ def parsed_input():
 
 
 Brick = Tuple[Tuple[int, int, int], Tuple[int, int, int]]
-# TODO change to has overlap
 
 
 def get_overlap(block: Brick, blocks: Iterable[Brick]):
@@ -42,17 +41,19 @@ def has_overlap_above(block: Brick, blocks: List[Brick]):
 
 def get_dependencies(block: Brick, matrix: List[Brick]):
     deps = get_overlap(block, matrix[: matrix.index(block)])
-    return [dep for dep in deps if not has_overlap_above(dep, deps)]
+    return [
+        dep
+        for dep in deps
+        if not has_overlap_above(dep, deps) and dep[1][2] == max(dep[1][2])
+    ]
 
 
 def is_removable(block: Brick, matrix: List[Brick]):
-    blocks_above = get_overlap(block, matrix[matrix.index(block) + 1: ])
-    return (
-        not has_overlap_above(block, matrix) or not any(
-        block in (dependencies := get_dependencies(candidate, matrix))
-        and len(dependencies) == 1
+    blocks_above = get_overlap(block, matrix[matrix.index(block) + 1 :])
+    return not any(
+        len(dependencies := get_dependencies(candidate, matrix)) == 1
+        and block in dependencies
         for candidate in blocks_above
-        )
     )
 
 
@@ -64,7 +65,7 @@ def part_one(coordinates: List[List[int]]):
         ((x1, y1, z1), (x2, y2, z2)) for x1, y1, z1, x2, y2, z2 in coordinates
     ]
     sorted_blocks = sorted(blocks, key=lambda x: x[0][2])
-    return sum(is_removable(block, blocks) for block in sorted_blocks)
+    return sum(is_removable(block, sorted_blocks) for block in sorted_blocks)
 
 
 if __name__ == "__main__":
