@@ -68,20 +68,22 @@ def falling_bricks_count_on_removal(block: Brick, bricks: List[Brick]):
            and block_above[0][2] - block[1][2] == 1
     ]
 
-    return len(immediate_falling_bricks) + sum(
-        falling_bricks_count_on_removal(falling_brick, bricks) for falling_brick in immediate_falling_bricks)
+    succeeding_falling_bricks = 0 if len(immediate_falling_bricks) == 0 else falling_bricks_count_on_removal(immediate_falling_bricks[0], [brick for brick in bricks if brick not in immediate_falling_bricks or brick == immediate_falling_bricks[0]])
+
+    return len(immediate_falling_bricks) + succeeding_falling_bricks
 
 
-def simulate_fall(sorted_blocks: List[Brick]):
-    for i, block in enumerate(sorted_blocks):
+def simulate_fall(blocks: List[Brick]):
+    sorted_blocks = sorted(blocks, key=lambda x: x[0][2])
+    for i, block in enumerate(blocks):
         ajusted_block = ((block[0][0], block[0][1], (
-            1 if len(deps := get_dependencies(block, sorted_blocks)) == 0 else max(dep[1][2] for dep in deps) + 1)),
+            1 if len(deps := get_dependencies(block, blocks)) == 0 else max(dep[1][2] for dep in deps) + 1)),
                          (block[1][0], block[1][1], (1 + block[1][2] - block[0][2] if len(
-                             deps := get_dependencies(block, sorted_blocks)) == 0 else max(dep[1][2] for dep in deps) +
-                                                                                       block[1][2] - block[0][2] + 1)))
-        sorted_blocks[i] = ajusted_block
+                             deps := get_dependencies(block, blocks)) == 0 else max(dep[1][2] for dep in deps) +
+                                                                                block[1][2] - block[0][2] + 1)))
+        blocks[i] = ajusted_block
 
-    return sorted_blocks
+    return blocks
 
 
 @benchmark
@@ -91,8 +93,7 @@ def part_one(coordinates: List[List[int]]):
     blocks: List[Brick] = [
         ((x1, y1, z1), (x2, y2, z2)) for x1, y1, z1, x2, y2, z2 in coordinates
     ]
-    sorted_blocks = sorted(blocks, key=lambda x: x[0][2])  # TODO add in simulate fall
-    blocks_after_fall = simulate_fall(sorted_blocks)
+    blocks_after_fall = simulate_fall(blocks)
     return sum(is_removable(block, blocks_after_fall) for block in blocks_after_fall)
 
 
