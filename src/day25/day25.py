@@ -10,11 +10,10 @@ def parsed_input():
         _parsed_input = []
 
         for line in data.readlines():
-            k, v = line.strip().split(': ')
+            k, v = line.strip().split(": ")
             _parsed_input += [(k, wire) for wire in v.split()]
 
         return _parsed_input
-
 
 
 @benchmark
@@ -27,7 +26,6 @@ def part_one(edges: List[Tuple[str, str]]):
     assert cut_value == 3
 
     return len(subgroups[0]) * len(subgroups[1])
-
 
 
 if __name__ == "__main__":

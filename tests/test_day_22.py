@@ -47,5 +47,6 @@ def test_has_overlap_above_when_overlap_does_not_exist():
 def test_part_one():
     assert part_one(RAW_EXAMPLE) == 5
 
+
 def test_part_two():
     assert part_two(RAW_EXAMPLE) == 7
