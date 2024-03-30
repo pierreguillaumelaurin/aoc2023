@@ -1,7 +1,7 @@
 import re
 from typing import Dict, Iterable, List, Tuple
 
-from src.utils import benchmark
+from src.utils import benchmark, flatten
 
 
 def parsed_input():
@@ -68,22 +68,33 @@ def falling_bricks_count_on_removal(block: Brick, bricks: List[Brick]):
            and block_above[0][2] - block[1][2] == 1
     ]
 
-    succeeding_falling_bricks = 0 if len(immediate_falling_bricks) == 0 else falling_bricks_count_on_removal(immediate_falling_bricks[0], [brick for brick in bricks if brick not in immediate_falling_bricks or brick == immediate_falling_bricks[0]])
+    succeeding_falling_bricks = 0 if len(immediate_falling_bricks) == 0 else falling_bricks_count_on_removal(
+        immediate_falling_bricks[0],
+        [brick for brick in bricks if brick not in immediate_falling_bricks or brick == immediate_falling_bricks[0]])
 
     return len(immediate_falling_bricks) + succeeding_falling_bricks
 
 
 def simulate_fall(blocks: List[Brick]):
-    sorted_blocks = sorted(blocks, key=lambda x: x[0][2])
-    for i, block in enumerate(blocks):
+    updated_blocks = sorted(blocks, key=lambda x: x[0][2])
+    for i, block in enumerate(updated_blocks):
         ajusted_block = ((block[0][0], block[0][1], (
-            1 if len(deps := get_dependencies(block, blocks)) == 0 else max(dep[1][2] for dep in deps) + 1)),
+            1 if len(deps := get_dependencies(block, updated_blocks)) == 0 else max(dep[1][2] for dep in deps) + 1)),
                          (block[1][0], block[1][1], (1 + block[1][2] - block[0][2] if len(
-                             deps := get_dependencies(block, blocks)) == 0 else max(dep[1][2] for dep in deps) +
-                                                                                block[1][2] - block[0][2] + 1)))
-        blocks[i] = ajusted_block
+                             deps := get_dependencies(block, updated_blocks)) == 0 else max(dep[1][2] for dep in deps) +
+                                                                                        block[1][2] - block[0][2] + 1)))
+        updated_blocks[i] = ajusted_block
 
-    return blocks
+    return updated_blocks
+
+
+def to_dependency_graph(blocks_after_fall: List[Brick]) -> Dict[Brick, List[Brick]]:
+    dependency_graph = {block: [] for block in blocks_after_fall}
+
+    for block in blocks_after_fall:
+        for dependency in get_dependencies(block, blocks_after_fall):
+            dependency_graph[dependency].append(block)
+    return dependency_graph
 
 
 @benchmark
@@ -94,7 +105,11 @@ def part_one(coordinates: List[List[int]]):
         ((x1, y1, z1), (x2, y2, z2)) for x1, y1, z1, x2, y2, z2 in coordinates
     ]
     blocks_after_fall = simulate_fall(blocks)
-    return sum(is_removable(block, blocks_after_fall) for block in blocks_after_fall)
+    dependency_graph = to_dependency_graph(blocks_after_fall)
+    dependency_graph_values = flatten(dependency_graph.values())
+
+    return sum(1 for block, dependent_blocks in dependency_graph.items() if
+               len(dependent_blocks) == 0 or all(dependency_graph_values.count(dep) > 1 for dep in dependent_blocks))
 
 
 @benchmark
