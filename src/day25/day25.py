@@ -7,13 +7,13 @@ from src.utils import benchmark
 
 def parsed_input():
     with open("./input.dat", "r") as data:
-        parsed_input = []
+        _parsed_input = []
 
         for line in data.readlines():
             k, v = line.strip().split(': ')
-            parsed_input += [(k, wire) for wire in v.split()]
+            _parsed_input += [(k, wire) for wire in v.split()]
 
-        return parsed_input
+        return _parsed_input
 
 
 

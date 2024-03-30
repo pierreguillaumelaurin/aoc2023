@@ -1,4 +1,4 @@
-from src.day22.day22 import get_overlap, has_overlap_above, part_one
+from src.day22.day22 import get_overlap, has_overlap_above, part_one, part_two
 
 RAW_EXAMPLE = [
     (1, 0, 1, 1, 2, 1),
@@ -44,5 +44,8 @@ def test_has_overlap_above_when_overlap_does_not_exist():
     assert has_overlap_above(PARSED_EXAMPLE[-1], PARSED_EXAMPLE) is False
 
 
-def test():
+def test_part_one():
     assert part_one(RAW_EXAMPLE) == 5
+
+def test_part_two():
+    assert part_two(RAW_EXAMPLE) == 7
