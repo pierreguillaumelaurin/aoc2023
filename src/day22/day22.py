@@ -1,4 +1,6 @@
 import re
+from collections import deque
+from copy import deepcopy
 from typing import Dict, Iterable, List, Tuple
 
 from src.utils import benchmark, flatten
@@ -58,23 +60,6 @@ def is_removable(block: Brick, bricks: List[Brick]):
     )
 
 
-def falling_bricks_count_on_removal(block: Brick, bricks: List[Brick]):
-    blocks_above = get_overlap(block, bricks[bricks.index(block) + 1:])
-    immediate_falling_bricks = [
-        block_above
-        for block_above in blocks_above
-        if len(dependencies := get_dependencies(block_above, bricks)) == 1
-           and block in dependencies
-           and block_above[0][2] - block[1][2] == 1
-    ]
-
-    succeeding_falling_bricks = 0 if len(immediate_falling_bricks) == 0 else falling_bricks_count_on_removal(
-        immediate_falling_bricks[0],
-        [brick for brick in bricks if brick not in immediate_falling_bricks or brick == immediate_falling_bricks[0]])
-
-    return len(immediate_falling_bricks) + succeeding_falling_bricks
-
-
 def simulate_fall(blocks: List[Brick]):
     updated_blocks = sorted(blocks, key=lambda x: x[0][2])
     for i, block in enumerate(updated_blocks):
@@ -97,6 +82,15 @@ def to_dependency_graph(blocks_after_fall: List[Brick]) -> Dict[Brick, List[Bric
     return dependency_graph
 
 
+def to_supported_by(blocks_after_fall: List[Brick]) -> Dict[Brick, List[Brick]]:
+    dependency_graph = {block: [] for block in blocks_after_fall}
+
+    for block in blocks_after_fall:
+        for dependency in get_dependencies(block, blocks_after_fall):
+            dependency_graph[block].append(dependency)
+    return dependency_graph
+
+
 @benchmark
 def part_one(coordinates: List[List[int]]):
     assert all(coordinate[2] <= coordinate[5] for coordinate in coordinates)
@@ -112,6 +106,31 @@ def part_one(coordinates: List[List[int]]):
                len(dependent_blocks) == 0 or all(dependency_graph_values.count(dep) > 1 for dep in dependent_blocks))
 
 
+def falling_bricks_count_on_removal(block: Brick, dependency_graph: Dict[Brick, List[Brick]], supported_by: Dict[Brick, List[Brick]]):
+    _supported_by = deepcopy(supported_by)
+    fallen = set(block)
+    seen = set()
+    priority = deque([block])
+    while priority:
+        next_block = priority.popleft()
+        next_block_deps = dependency_graph[next_block]
+        for dep in next_block_deps:
+            if dep not in seen and all(dep_ in fallen for dep_ in _supported_by[dep]):
+                fallen.add(dep)
+                priority.extend(dependency_graph[dep])
+            seen.add(dep)
+    return len(fallen)
+
+
+
+
+
+
+
+
+
+
+
 @benchmark
 def part_two(coordinates: List[List[int]]):
     assert all(coordinate[2] <= coordinate[5] for coordinate in coordinates)
@@ -119,11 +138,16 @@ def part_two(coordinates: List[List[int]]):
     blocks: List[Brick] = [
         ((x1, y1, z1), (x2, y2, z2)) for x1, y1, z1, x2, y2, z2 in coordinates
     ]
-    sorted_blocks = sorted(blocks, key=lambda x: x[0][2])  # TODO add in simulate fall
-    blocks_after_fall = simulate_fall(sorted_blocks)
-    return sum(falling_bricks_count_on_removal(block, blocks_after_fall) for block in blocks_after_fall)
+    blocks_after_fall = simulate_fall(blocks)
+    dependency_graph = to_dependency_graph(blocks_after_fall)
+    supported_by = to_supported_by(blocks_after_fall)
+
+    return sum(falling_bricks_count_on_removal(block, dependency_graph, supported_by) for block in dependency_graph)
+
+
 
 
 if __name__ == "__main__":
     assert part_one(parsed_input()) == 401
     print(part_one(parsed_input()))
+    print(part_two(parsed_input()))
