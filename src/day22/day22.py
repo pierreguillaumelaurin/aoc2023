@@ -126,19 +126,16 @@ def falling_bricks_count_on_removal(
     dependency_graph: Dict[Brick, List[Brick]],
     supported_by: Dict[Brick, List[Brick]],
 ):
-    _supported_by = deepcopy(supported_by)
-    fallen = set(block)
-    seen = set()
+    fallen = set()
     priority = deque([block])
     while priority:
         next_block = priority.popleft()
-        next_block_deps = dependency_graph[next_block]
-        for dep in next_block_deps:
-            if dep not in seen and all(dep_ in fallen for dep_ in _supported_by[dep]):
-                fallen.add(dep)
-                priority.extend(dependency_graph[dep])
-            seen.add(dep)
-    return len(fallen)
+        fallen.add(next_block)
+        dependent_blocks = dependency_graph[next_block]
+        for dependent_block in dependent_blocks:
+            if all(dep_ in fallen for dep_ in supported_by[dependent_block]):
+                priority.append(dependent_block)
+    return len(fallen) - 1
 
 
 @benchmark
@@ -161,4 +158,6 @@ def part_two(coordinates: List[List[int]]):
 if __name__ == "__main__":
     assert part_one(parsed_input()) == 401
     print(part_one(parsed_input()))
+
+    assert part_two(parsed_input()) == 63491
     print(part_two(parsed_input()))
