@@ -28,4 +28,4 @@ EXAMPLE = [
 
 
 def test_part_one():
-    assert part_one(EXAMPLE) == 90
+    assert part_one(EXAMPLE) == 94
