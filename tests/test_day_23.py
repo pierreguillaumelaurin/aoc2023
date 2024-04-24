@@ -1,4 +1,4 @@
-from src.day23.day23 import part_one
+from src.day23.day23 import part_one, part_two
 
 EXAMPLE = [
     "#.#####################",
@@ -29,3 +29,9 @@ EXAMPLE = [
 
 def test_part_one():
     assert part_one(EXAMPLE) == 94
+
+
+def test_part_two():
+    assert part_two(EXAMPLE) == 154
+
+

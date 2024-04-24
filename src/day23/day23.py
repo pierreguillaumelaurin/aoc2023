@@ -15,7 +15,18 @@ WALKABLE_TILES = ["."] + SLOPES
 
 
 class WeightedGraph:
-    def __init__(self, trails_map: List[str]):
+    class Edge:
+        def __init__(self, source: Coordinates, destination: Coordinates, weight: int):
+            self.source = source
+            self.destination = destination
+            self.weight = weight
+
+        def __repr__(self):
+            return (
+                f"Edge<from:{self.source}, to:{self.destination}, weight:{self.weight}>"
+            )
+
+    def __init__(self, trails_map: List[str], slippery=False):
         self._trails_map = trails_map
         self.connections: Dict[Coordinates, Dict[Coordinates, int]] = {}
 
@@ -24,7 +35,10 @@ class WeightedGraph:
 
         self._add_nodes()
 
-        self._add_edges()
+        if slippery:
+            self._add_edges_when_slippery()
+        else:
+            self._add_edges()
 
     def _add_nodes(self):
         self.connections[self.start] = {}
@@ -41,7 +55,7 @@ class WeightedGraph:
                     case _:
                         self.connections[position] = {}
 
-    def _add_edges(self):
+    def _add_edges_when_slippery(self):
         for node in self.connections:
             stack = [(node, 0)]
             seen = {node}
@@ -53,6 +67,22 @@ class WeightedGraph:
                     self.connections[node][position] = count
                 else:
                     for cell in self.get_walkable_adjacent_cells_when_slippery(position):
+                        if cell not in seen:
+                            stack.append((cell, count + 1))
+                            seen.add(cell)
+
+    def _add_edges(self):
+        for node in self.connections:
+            stack = [(node, 0)]
+            seen = {node}
+
+            while stack:
+                position, count = stack.pop()
+
+                if position in self.connections and count != 0:
+                    self.connections[node][position] = count
+                else:
+                    for cell in self.get_walkable_adjacent_cells(position):
                         if cell not in seen:
                             stack.append((cell, count + 1))
                             seen.add(cell)
@@ -72,7 +102,7 @@ class WeightedGraph:
         helper(self.start)
         return result
 
-    def find_longest_path(self):
+    def find_longest_slippery_path(self):
         node_cost_from_start = {node: -float("inf") for node in self.connections}
         node_cost_from_start[self.start] = 0
         for node in self.topological_sort():
@@ -86,6 +116,25 @@ class WeightedGraph:
                         node_cost_from_start[node] + weight
                     )
         return node_cost_from_start[self.end]
+
+    def find_longest_path(self):
+        def dfs(node: Coordinates):
+            if node == self.end:
+                return 0
+
+            maximum = -float("inf")
+
+            connections = self.connections[node]
+
+            seen.add(node)
+            for destination, weight in connections.items():
+                if destination not in seen:
+                    maximum = max(maximum, dfs(destination) + weight)
+            seen.remove(node)
+            return maximum
+
+        seen = set()
+        return dfs(self.start)
 
     def get_adjacent_cells(self, coordinates: Coordinates):
         x, y = coordinates
@@ -104,15 +153,14 @@ class WeightedGraph:
             if self._trails_map[cell[0]][cell[1]] in SLOPES
         ]
         for cell in slopes_except_forest:
-            tile_value = self._trails_map[cell[0]][cell[1]]
             match substract_coordinates(cell, position):
-                case (-1, 0) if tile_value != "v":
+                case (-1, 0):
                     walkable_adjacent_slopes.append(cell)
-                case (0, -1) if tile_value != ">":
+                case (0, -1):
                     walkable_adjacent_slopes.append(cell)
-                case (1, 0) if tile_value != "^":
+                case (1, 0) :
                     walkable_adjacent_slopes.append(cell)
-                case (0, 1) if tile_value != "<":
+                case (0, 1):
                     walkable_adjacent_slopes.append(cell)
                 case _:
                     continue
@@ -164,16 +212,18 @@ class WeightedGraph:
 
 @benchmark
 def part_one(trails: List[str]):
-    graph = WeightedGraph(trails)
-    return graph.find_longest_path()
+    graph = WeightedGraph(trails, slippery=True)
+    return graph.find_longest_slippery_path()
 
 
 @benchmark
 def part_two(trails: List[str]):
-    pass
+    graph = WeightedGraph(trails)
+    return graph.find_longest_path()
 
 
 if __name__ == "__main__":
     print(part_one(parsed_input()))
-    assert part_one(parsed_input()) == 2170.0
+    assert part_one(parsed_input()) == 2170
     print(part_two(parsed_input()))
+    assert part_two(parsed_input()) == 6502.0
