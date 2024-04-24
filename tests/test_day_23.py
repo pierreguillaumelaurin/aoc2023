@@ -33,5 +33,3 @@ def test_part_one():
 
 def test_part_two():
     assert part_two(EXAMPLE) == 154
-
-

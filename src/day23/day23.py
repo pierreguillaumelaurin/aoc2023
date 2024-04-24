@@ -15,18 +15,7 @@ WALKABLE_TILES = ["."] + SLOPES
 
 
 class WeightedGraph:
-    class Edge:
-        def __init__(self, source: Coordinates, destination: Coordinates, weight: int):
-            self.source = source
-            self.destination = destination
-            self.weight = weight
-
-        def __repr__(self):
-            return (
-                f"Edge<from:{self.source}, to:{self.destination}, weight:{self.weight}>"
-            )
-
-    def __init__(self, trails_map: List[str], slippery=False):
+    def __init__(self, trails_map: List[str]):
         self._trails_map = trails_map
         self.connections: Dict[Coordinates, Dict[Coordinates, int]] = {}
 
@@ -34,11 +23,7 @@ class WeightedGraph:
         self.end = (len(trails_map) - 1, trails_map[len(trails_map) - 1].index("."))
 
         self._add_nodes()
-
-        if slippery:
-            self._add_edges_when_slippery()
-        else:
-            self._add_edges()
+        self._add_edges()
 
     def _add_nodes(self):
         self.connections[self.start] = {}
@@ -55,22 +40,6 @@ class WeightedGraph:
                     case _:
                         self.connections[position] = {}
 
-    def _add_edges_when_slippery(self):
-        for node in self.connections:
-            stack = [(node, 0)]
-            seen = {node}
-
-            while stack:
-                position, count = stack.pop()
-
-                if position in self.connections and count != 0:
-                    self.connections[node][position] = count
-                else:
-                    for cell in self.get_walkable_adjacent_cells_when_slippery(position):
-                        if cell not in seen:
-                            stack.append((cell, count + 1))
-                            seen.add(cell)
-
     def _add_edges(self):
         for node in self.connections:
             stack = [(node, 0)]
@@ -86,36 +55,6 @@ class WeightedGraph:
                         if cell not in seen:
                             stack.append((cell, count + 1))
                             seen.add(cell)
-
-    def topological_sort(self):
-        result = deque()
-        seen = set()
-
-        def helper(node: Coordinates):
-            neighbors = self.connections[node]
-            for neighbor in neighbors:
-                if neighbor not in seen:
-                    seen.add(neighbor)
-                    helper(neighbor)
-            result.appendleft(node)
-
-        helper(self.start)
-        return result
-
-    def find_longest_slippery_path(self):
-        node_cost_from_start = {node: -float("inf") for node in self.connections}
-        node_cost_from_start[self.start] = 0
-        for node in self.topological_sort():
-            connections = self.connections[node]
-            for destination, weight in connections.items():
-                if (
-                    node_cost_from_start[node] + weight
-                    > node_cost_from_start[destination]
-                ):
-                    node_cost_from_start[destination] = (
-                        node_cost_from_start[node] + weight
-                    )
-        return node_cost_from_start[self.end]
 
     def find_longest_path(self):
         def dfs(node: Coordinates):
@@ -145,27 +84,6 @@ class WeightedGraph:
             if 0 <= r < len(self._trails_map) and 0 <= c < len(self._trails_map[0])
         ]
 
-    def get_walkable_adjacent_slopes(self, position: Coordinates):
-        walkable_adjacent_slopes = []
-        slopes_except_forest = [
-            cell
-            for cell in self.get_adjacent_cells(position)
-            if self._trails_map[cell[0]][cell[1]] in SLOPES
-        ]
-        for cell in slopes_except_forest:
-            match substract_coordinates(cell, position):
-                case (-1, 0):
-                    walkable_adjacent_slopes.append(cell)
-                case (0, -1):
-                    walkable_adjacent_slopes.append(cell)
-                case (1, 0) :
-                    walkable_adjacent_slopes.append(cell)
-                case (0, 1):
-                    walkable_adjacent_slopes.append(cell)
-                case _:
-                    continue
-        return walkable_adjacent_slopes
-
     def get_walkable_adjacent_cells(self, position: Coordinates):
         walkable_adjacent_cells = []
         cells_except_forest = [
@@ -187,7 +105,9 @@ class WeightedGraph:
                     continue
         return walkable_adjacent_cells
 
-    def get_walkable_adjacent_cells_when_slippery(self, position: Coordinates):
+
+class SlipperyWeightedGraph(WeightedGraph):
+    def _get_nodes_when_slippery(self, position: Coordinates):
         walkable_adjacent_cells = []
         cells_except_forest = [
             cell
@@ -209,11 +129,57 @@ class WeightedGraph:
                     continue
         return walkable_adjacent_cells
 
+    def _add_edges(self):
+        for node in self.connections:
+            stack = [(node, 0)]
+            seen = {node}
+
+            while stack:
+                position, count = stack.pop()
+
+                if position in self.connections and count != 0:
+                    self.connections[node][position] = count
+                else:
+                    for cell in self._get_nodes_when_slippery(position):
+                        if cell not in seen:
+                            stack.append((cell, count + 1))
+                            seen.add(cell)
+
+    def topological_sort(self):
+        result = deque()
+        seen = set()
+
+        def helper(node: Coordinates):
+            neighbors = self.connections[node]
+            for neighbor in neighbors:
+                if neighbor not in seen:
+                    seen.add(neighbor)
+                    helper(neighbor)
+            result.appendleft(node)
+
+        helper(self.start)
+        return result
+
+    def find_longest_path(self):
+        node_cost_from_start = {node: -float("inf") for node in self.connections}
+        node_cost_from_start[self.start] = 0
+        for node in self.topological_sort():
+            connections = self.connections[node]
+            for destination, weight in connections.items():
+                if (
+                    node_cost_from_start[node] + weight
+                    > node_cost_from_start[destination]
+                ):
+                    node_cost_from_start[destination] = (
+                        node_cost_from_start[node] + weight
+                    )
+        return node_cost_from_start[self.end]
+
 
 @benchmark
 def part_one(trails: List[str]):
-    graph = WeightedGraph(trails, slippery=True)
-    return graph.find_longest_slippery_path()
+    graph = SlipperyWeightedGraph(trails)
+    return graph.find_longest_path()
 
 
 @benchmark
